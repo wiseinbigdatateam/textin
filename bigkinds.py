@@ -10,6 +10,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 import os
 import time
 import csv
+import pandas as pd
 
 
 class CrawlingBigkinds:
@@ -17,7 +18,7 @@ class CrawlingBigkinds:
         # chromedriver의 위치를 지정
         chromedriver_path = '/Applications/chromedriver'
         window_size = "1920,1200"
-        self.listnum = 100  # 10이 원래 기본, 100으로 설정할 것
+        self.listnum = 10  # 10이 원래 기본, 100으로 설정할 것
         self.url = 'https://www.bigkinds.or.kr/'
         # 사용자 입력 정보
         self.keyword = keyword
@@ -46,8 +47,6 @@ class CrawlingBigkinds:
         self.driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
         self.driver.implicitly_wait(3)  # 웹 자원 로드 위해 3초 대기
 
-        # def crawling contents()
-
         # def crawling_body()
         # 본문 크롤링용 xpath
         self.title_xpath = '//*[@id="news-detail-modal"]/div/div/div[1]/div/div[1]/h1'
@@ -62,6 +61,22 @@ class CrawlingBigkinds:
                             '//*[@id="news-detail-modal"]/div/div/div[1]/div/div[3]/ul/li[3]/dd/a',
                             '//*[@id="news-detail-modal"]/div/div/div[1]/div/div[4]/ul/li[3]/dd/a'
                             ]
+
+    def check_exist_file(self):
+        if os.path.exists(self.file_name):
+            exist_file = pd.read_csv(self.file_name)
+            exist_index = len(exist_file.index)
+            print(f'기존 파일이 존재합니다. 행 수: {exist_index}')
+            # print('exist_file len: ', len(exist_file.index))
+            start_page = int(exist_index / self.listnum + 1)
+            start_list = exist_index % self.listnum
+        else:
+            start_page = 1
+            start_list = 1
+        return start_page, start_list
+
+    def claculate_start(self):
+        bigkinds.check_exist_file()
 
     def search_keyword(self):
         # 처음에 상세검색으로 날짜 지정하고 검색 시작 -첫화면url로 시작, 상세검색 클릭 후 날짜 먼저 지정
@@ -167,7 +182,7 @@ class CrawlingBigkinds:
 
                 # 건 수 카운팅
                 count += 1
-                if count % 5 == 0:
+                if count % 10 == 0:
                     print(f'{count}건을 가져왔습니다.')
 
                 # 해당 리스트 페이지의 마지막 인덱스 본문 크롤링을 마치면 모달창 닫음
@@ -182,9 +197,11 @@ class CrawlingBigkinds:
             state = 0
 
         finally:
-            return results, count, state
+            return results, count, state, 1
 
-    def crawling_contents(self, start_page=1, start_list=1):
+    def crawling_contents(self, start_page, start_list):
+        # self.calculate_start()
+
         results = []
         total_page = int(self.result_number/self.listnum + 1)
         last_list = self.result_number % self.listnum
@@ -220,24 +237,12 @@ class CrawlingBigkinds:
             self.driver.find_element(By.XPATH, first_title_xpath).click()
             time.sleep(1)
 
-            # 본문 크롤링
-            # 첫번째 페이지가 중간부터 시작할 경우
-            if not start_list == 1:
-                print('if not start list 1')
-                if i == total_page:
-                    print(f'마지막 페이지 크롤링 시작: {total_page}페이지')
-                    body_results, index, state = self.crawling_body(start_list, last_list)
-                else:
-                    body_results, index, state = self.crawling_body(start_list, self.listnum)
-                start_list = 1
-
+            # 마지막 페이지
+            if i == total_page:
+                print(f'마지막 페이지 크롤링 시작: {total_page}페이지')
+                body_results, index, state, start_list = self.crawling_body(start_list, last_list)
             else:
-                # 마지막 페이지
-                if i == total_page:
-                    print(f'마지막 페이지 크롤링 시작: {total_page}페이지')
-                    body_results, index, state = self.crawling_body(start_list, last_list)
-                else:
-                    body_results, index, state = self.crawling_body(start_list, self.listnum)
+                body_results, index, state, start_list = self.crawling_body(start_list, self.listnum)
 
             results.extend(body_results)
             print(f'******Finished page crawling - page: {i}, list: {index}******')
@@ -268,11 +273,15 @@ class CrawlingBigkinds:
 
 
 if __name__ == '__main__':
-    bigkinds = CrawlingBigkinds(keyword='문화유산', start_date='20211101', end_date='20211130')
+    bigkinds = CrawlingBigkinds(keyword='에그타르트', start_date='20210901', end_date='20211130') # init에 기본값 설정하고 set함수 만들기
     result_number = bigkinds.search_keyword()
-    results, state = bigkinds.crawling_contents()
+    # start_page, start_list = bigkinds.check_exist_file()
+    # print(start_page, start_list)
+    # results, state = bigkinds.crawling_contents(start_page, start_list)
+    results, state = bigkinds.crawling_contents(2, 2)
+
     print(f'총 검색 결과: {result_number}, results 길이: {len(results)}, 상태: {state}')
-    bigkinds.save_to_csv(results)
+    bigkinds.save_to_csv(results) # csv 저장 전에 판다스로 전환 후 저장. 중간 취소되면 저장 이름에 반영. 완료되면 이름 바꾸고 원래 것 지움
 
     # ==처음에 상세검색으로 날짜 지정하고 검색 시작 -첫화면url로 시작, 상세검색 클릭 후 날짜 먼저 지정==
     # csv name = 키워드_출처_시작날짜_끝날짜, 변수로 총 개수, 상태(실패 0, 정상 1)까지 반환
@@ -280,3 +289,6 @@ if __name__ == '__main__':
     # 시작 페이지를 디폴트 0, 값이 있으면 그 값부터 하도록
 
     # 해당 제목으로 된 csv파일이 있는지 체크, 있으면 길이가 몇개인지 확인 후 시작 페이지, 인덱스 계산
+
+    # jira
+    # git
