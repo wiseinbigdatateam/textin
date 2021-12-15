@@ -18,6 +18,7 @@ from blogXpath import Tstory_blog_xpath
 from findBlogContents import FindTsotryContents
 from reworkBlogContents import ReworkContents
 from saveCsv import df_save_csv
+from setWebdriver import set_driver as setting_driver
 
 chromedriver_path = '/Applications/chromedriver'
 # qText = input("검색어를 입력 해주세요 : ")
@@ -33,48 +34,47 @@ find_content = FindTsotryContents()  # 크롤링 데이터 탐색 부분
 rework_content = ReworkContents()  # 전처리 부분
 
 
-
-def open_site(driver):
-    url = "https://search.daum.net/search?w=blog&f=section&SA=tistory&lpp=10&nil_src=blog&q=" + quote(qText) + "&p=1"
-    driver.get(url)
-    driver.implicitly_wait(10)
-
-    if start_date and end_date != "":
-        driver.find_element_by_xpath(xpath_root.period_setting_button).click()  # 기간설정
-
-        s_date = driver.find_element_by_xpath(xpath_root.start_date_button)
-        driver.find_element_by_xpath(xpath_root.start_date_button).click()
-        s_date.clear()
-        time.sleep(0.5)
-        for c in start_date:
-            s_date.send_keys(c)
-            time.sleep(0.25)
-
-        click_num = start_date.split(".")[-1]
-        driver.find_element_by_link_text(f"{click_num}").click()
-
-        e_date = driver.find_element_by_xpath(xpath_root.end_date_button)
-        driver.find_element_by_xpath(xpath_root.end_date_button).click()
-        e_date.clear()
-        time.sleep(0.5)
-        for c in end_date:
-            e_date.send_keys(c)
-            time.sleep(0.25)
-
-        click_num = end_date.split(".")[-1]
-        driver.find_element_by_link_text(f"{click_num}").click()
-        driver.find_element_by_xpath(xpath_root.set_period_button).click()  # 적용
-
-    else:
-        driver.find_element_by_xpath(xpath_root.period_setting_button).click()  # 기간설정
-        driver.find_element_by_xpath(xpath_root.one_day).click()  # 1일
-        driver.find_element_by_xpath(xpath_root.set_period_button).click()  # 적용
-    time.sleep(1)
-    driver.find_element_by_xpath(xpath_root.select_blog).click()  # 출처 (블로그 종류)
-    driver.find_element_by_xpath(xpath_root.select_tstory).click()  # 티스토리 선택
-    time.sleep(1)
-
-    return driver
+# def open_site(driver):
+#     url = "https://search.daum.net/search?w=blog&f=section&SA=tistory&lpp=10&nil_src=blog&q=" + quote(qText) + "&p=1"
+#     driver.get(url)
+#     driver.implicitly_wait(10)
+#
+#     if start_date and end_date != "":
+#         driver.find_element_by_xpath(xpath_root.period_setting_button).click()  # 기간설정
+#
+#         s_date = driver.find_element_by_xpath(xpath_root.start_date_button)
+#         driver.find_element_by_xpath(xpath_root.start_date_button).click()
+#         s_date.clear()
+#         time.sleep(0.5)
+#         for c in start_date:
+#             s_date.send_keys(c)
+#             time.sleep(0.25)
+#
+#         click_num = start_date.split(".")[-1]
+#         driver.find_element_by_link_text(f"{click_num}").click()
+#
+#         e_date = driver.find_element_by_xpath(xpath_root.end_date_button)
+#         driver.find_element_by_xpath(xpath_root.end_date_button).click()
+#         e_date.clear()
+#         time.sleep(0.5)
+#         for c in end_date:
+#             e_date.send_keys(c)
+#             time.sleep(0.25)
+#
+#         click_num = end_date.split(".")[-1]
+#         driver.find_element_by_link_text(f"{click_num}").click()
+#         driver.find_element_by_xpath(xpath_root.set_period_button).click()  # 적용
+#
+#     else:
+#         driver.find_element_by_xpath(xpath_root.period_setting_button).click()  # 기간설정
+#         driver.find_element_by_xpath(xpath_root.one_day).click()  # 1일
+#         driver.find_element_by_xpath(xpath_root.set_period_button).click()  # 적용
+#     time.sleep(1)
+#     driver.find_element_by_xpath(xpath_root.select_blog).click()  # 출처 (블로그 종류)
+#     driver.find_element_by_xpath(xpath_root.select_tstory).click()  # 티스토리 선택
+#     time.sleep(1)
+#
+#     return driver
 
 
 # 검색 결과에 따른 총 페이지 수 파악
@@ -87,19 +87,19 @@ def find_page_count(text):
     return page_count
 
 
-def set_driver(webdriver):
-    window_size = "1200,800"
-    chrome_options = Options()
-    # chrome_options.add_argument('headless')  # 창 안뜨게
-    chrome_options.add_argument(f"--window-size={window_size}")  # 창 사이즈
-    driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
-    driver.implicitly_wait(10)  # seconds
-    url = open_site(driver).current_url
-    driver.implicitly_wait(15)
-    driver.get(url)
-    time.sleep(1)
-
-    return driver, url
+# def set_driver(webdriver):
+#     window_size = "1200,800"
+#     chrome_options = Options()
+#     # chrome_options.add_argument('headless')  # 창 안뜨게
+#     chrome_options.add_argument(f"--window-size={window_size}")  # 창 사이즈
+#     driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
+#     driver.implicitly_wait(10)  # seconds
+#     url = open_site(driver).current_url
+#     driver.implicitly_wait(15)
+#     driver.get(url)
+#     time.sleep(1)
+#
+#     return driver, url
 
 
 def tistory_url_crwaling():
@@ -109,7 +109,7 @@ def tistory_url_crwaling():
     return_url_list = []
     count_num = 0
 
-    driver, url = set_driver(webdriver)  # 셀레니움 드라이버 설정
+    driver, url = setting_driver(webdriver, 2)  # 셀레니움 드라이버 설정
 
     page_num_text = driver.find_element_by_xpath(xpath_root.page_all_text).text
     page_count = find_page_count(page_num_text)

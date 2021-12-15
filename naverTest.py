@@ -10,17 +10,19 @@ from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 from urllib.parse import quote
 
+from setWebdriver import set_driver as setting_driver
 from blogXpath import Naver_blog_xpath
 from findBlogContents import FindNaverContents
 from reworkBlogContents import ReworkContents
 from saveCsv import df_save_csv
 
+
 chromedriver_path = '/Applications/chromedriver'  # 크롬드라이버 경로
 
 # 테스트용
 qText = "시그 mcx"
-start_date = "20190101"  # 시작날짜
-end_date = "20211125"  # 종료날짜
+start_date = "2019.1.1"  # 시작날짜
+end_date = "2021.11.25"  # 종료날짜
 
 # 파일명 이제 지정
 # 키워드_시작날짜_끝날짜로 저장되게 수정하기
@@ -30,48 +32,49 @@ mainCsvFileName = f"{qText}_네이버블로그_{start_date}_{end_date}.csv"  # �
 xpath_root = Naver_blog_xpath()  # xpath 경로
 find_content = FindNaverContents()  # 크롤링 데이터 탐색 부분
 rework_content = ReworkContents()  # 전처리 부분
+# setting_driver = set_driver()  # 셀레니움 드라이버 셋팅
 
 
-def open_site_re(driver):
-    url = "https://section.blog.naver.com/Search/Post.naver?pageNo=1&rangeType=ALL&orderBy=sim&keyword=" + quote(qText)
-    driver.get(url)
-    driver.implicitly_wait(10)
-
-    if start_date != "" and end_date != "":
-        driver.find_element_by_xpath(xpath_root.period_setting_button).click()  # 기간설정
-        time.sleep(1)
-
-        # 시작날짜를 입력하는 부분
-        ## 체크
-        s_date = driver.find_element_by_xpath(xpath_root.start_date_button)
-        driver.find_element_by_xpath(xpath_root.start_date_button).click()
-        s_date.clear()
-        time.sleep(0.5)
-        for c in start_date:
-            s_date.send_keys(c)
-            time.sleep(0.2)
-        driver.find_element_by_xpath(xpath_root.period_setting_button).click()
-        time.sleep(0.5)
-        driver.find_element_by_xpath(xpath_root.period_setting_button).click()
-
-        # 종료날짜를 입력하는 부분
-        e_date = driver.find_element_by_xpath(xpath_root.end_date_button)
-        driver.find_element_by_xpath(xpath_root.end_date_button).click()
-        e_date.clear()
-        time.sleep(0.5)
-        for c in end_date:
-            e_date.send_keys(c)
-            time.sleep(0.2)
-        driver.find_element_by_xpath(xpath_root.period_setting_button).click()
-        time.sleep(0.5)
-        driver.find_element_by_xpath(xpath_root.period_setting_button).click()
-        driver.find_element_by_xpath(xpath_root.set_period_button).click()  # 적용
-    else:
-        driver.find_element_by_xpath(xpath_root.period_setting_button).click()
-        driver.find_element_by_xpath(xpath_root.one_week).click()
-    time.sleep(2)
-
-    return driver
+# def open_site(driver):
+#     url = "https://section.blog.naver.com/Search/Post.naver?pageNo=1&rangeType=ALL&orderBy=sim&keyword=" + quote(qText)
+#     driver.get(url)
+#     driver.implicitly_wait(10)
+#
+#     if start_date != "" and end_date != "":
+#         driver.find_element_by_xpath(xpath_root.period_setting_button).click()  # 기간설정
+#         time.sleep(1)
+#
+#         # 시작날짜를 입력하는 부분
+#         ## 체크
+#         s_date = driver.find_element_by_xpath(xpath_root.start_date_button)
+#         driver.find_element_by_xpath(xpath_root.start_date_button).click()
+#         s_date.clear()
+#         time.sleep(0.5)
+#         for c in start_date:
+#             s_date.send_keys(c)
+#             time.sleep(0.2)
+#         driver.find_element_by_xpath(xpath_root.period_setting_button).click()
+#         time.sleep(0.5)
+#         driver.find_element_by_xpath(xpath_root.period_setting_button).click()
+#
+#         # 종료날짜를 입력하는 부분
+#         e_date = driver.find_element_by_xpath(xpath_root.end_date_button)
+#         driver.find_element_by_xpath(xpath_root.end_date_button).click()
+#         e_date.clear()
+#         time.sleep(0.5)
+#         for c in end_date:
+#             e_date.send_keys(c)
+#             time.sleep(0.2)
+#         driver.find_element_by_xpath(xpath_root.period_setting_button).click()
+#         time.sleep(0.5)
+#         driver.find_element_by_xpath(xpath_root.period_setting_button).click()
+#         driver.find_element_by_xpath(xpath_root.set_period_button).click()  # 적용
+#     else:
+#         driver.find_element_by_xpath(xpath_root.period_setting_button).click()
+#         driver.find_element_by_xpath(xpath_root.one_week).click()
+#     time.sleep(2)
+#
+#     return driver
 
 
 # 검색 결과에 따른 총 페이지 수 파악
@@ -83,19 +86,22 @@ def find_page_count(text):
     return page_count
 
 
-def set_driver(webdriver):
-    window_size = "1200,800"
-    chrome_options = Options()
-    # chrome_options.add_argument('headless') # 창 안뜨게
-    chrome_options.add_argument(f"--window-size={window_size}")  # 창 사이즈
-    driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
-    driver.implicitly_wait(10)  # 페이지 로딩될때까지 최대 몇초까지 기다릴것인지
-    url = open_site_re(driver).current_url
-    driver.implicitly_wait(15)
-    driver.get(url)
-    time.sleep(1)
-
-    return driver, url
+# def set_driver(webdriver, args):
+#     window_size = "1200,800"
+#     chrome_options = Options()
+#     # chrome_options.add_argument('headless') # 창 안뜨게
+#     chrome_options.add_argument(f"--window-size={window_size}")  # 창 사이즈
+#     driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
+#     driver.implicitly_wait(10)  # 페이지 로딩될때까지 최대 몇초까지 기다릴것인지
+#     if args == 1:
+#         url = open_site(driver).current_url
+#     elif args == 2:
+#         url = open_site(driver).current_url
+#     driver.implicitly_wait(15)
+#     driver.get(url)
+#     time.sleep(1)
+#
+#     return driver, url
 
 
 def content_crawling():
@@ -106,7 +112,7 @@ def content_crawling():
     return_url_list = []
     count_num = 0
 
-    driver, url = set_driver(webdriver) # 셀레니움 드라이버 설정
+    driver, url = setting_driver(webdriver, 1)  # 셀레니움 드라이버 설정
 
     page_num_text = driver.find_element_by_xpath(xpath_root.page_all_text).text
     page_count = find_page_count(page_num_text) # 페이지 수 파악
