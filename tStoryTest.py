@@ -22,8 +22,8 @@ from saveCsv import df_save_csv
 chromedriver_path = '/Applications/chromedriver'
 # qText = input("검색어를 입력 해주세요 : ")
 qText = "시그 mcx"
-start_date = "2021.01.1"  # ex 2021.12.2 or 16 식으로 입력
-end_date = "2021.12.1"
+start_date = "2020.12.1"  # ex 2021.12.2 or 16 식으로 입력
+end_date = "2021.12.15"
 
 csvFileName = f"{qText}_티스토리_{start_date}_{end_date}_url.csv"
 mainCsvFileName = f"{qText}_티스토리_{start_date}_{end_date}.csv"
@@ -77,6 +77,16 @@ def open_site(driver):
     return driver
 
 
+# 검색 결과에 따른 총 페이지 수 파악
+def find_page_count(text):
+    text = text.split("/")
+    page_num = int(text[1].replace("건", "").replace("약", "").replace(",", ""))
+    page_count = int(page_num / 10)
+    if page_count == 0:
+        page_count = 1
+    return page_count
+
+
 def tistory_url_crwaling():
     startTime = time.time()
     # 타이틀, url, 횟수
@@ -96,10 +106,9 @@ def tistory_url_crwaling():
     driver.implicitly_wait(15)
     driver.get(url)
 
-    page_count = driver.find_element_by_xpath(xpath_root.page_all_text).text
-    page_count = page_count.split("/")
-    page_count = int(page_count[1].replace("건", "").replace("약", "").replace(",", ""))
-    page_count = int(page_count / 10)
+    page_num_text = driver.find_element_by_xpath(xpath_root.page_all_text).text
+    print(page_num_text)
+    page_count = find_page_count(page_num_text)
     if page_count == 0:
         page_count = 1
     print("총 페이지 : ", page_count)
@@ -255,20 +264,8 @@ def main_crawling(data):
 
 
 if __name__ == '__main__':
-    """
-        키워드
-        - 세계유산축전
-        - 세계유산축전 & 백제
-        - 세계유산축전 & 안동
-        - 세계유산축전 & 수원 / 화성
-        - 세계유산축전 & 제주
 
-        기간: 2021.1.1~ 10.31
-
-        """
     startTime = time.time()
-
-    content_list = ""
 
     # DateFreme로 동작하는 부분
     first_df = tistory_url_crwaling()
