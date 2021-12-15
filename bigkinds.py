@@ -14,36 +14,38 @@ import pandas as pd
 
 
 class CrawlingBigkinds:
-    def __init__(self, keyword, start_date, end_date):
+    def __init__(self):
         # chromedriver의 위치를 지정
         chromedriver_path = '/Applications/chromedriver'
         window_size = "1920,1200"
         self.listnum = 10  # 10이 원래 기본, 100으로 설정할 것
         self.url = 'https://www.bigkinds.or.kr/'
         # 사용자 입력 정보
-        self.keyword = keyword
-        self.start_date = start_date
-        self.end_date = end_date
+        self._keyword = '에그타르트'
+        self._start_date = '20210901'
+        self._end_date = '20211130'
         # 결과 저장 csv 파일명
-        self.file_name = f'{keyword}_bigkinds_{start_date}_{end_date}.csv'
+        self.file_name = f'{self._keyword}_bigkinds_{self._start_date}_{self._end_date}'
+        self.save_path = "./"
+
 
         # 크롬드라이버 옵션
         chrome_options = Options()
-        # 포트 9222로 열어둔(VPN 확장프로그램 설치 및 로그인해 놓은) 크롬창에서 디버그 모드로 실행
-        # 9222포트로 크롬 실행 맥 터미널
-        # /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="/ChromeProfile"
-        # 윈도우 실행창
-        # C:\Program Files (x86)\Google\Chrome\Application\chrome.exe --remote-debugging-port=9222 --user-data-dir="C:/ChromeTEMP"
-        # 혹은
-        # C:\Program Files\Google\Chrome\Application\chrome.exe --remote-debugging-port=9222 --user-data-dir="C:/ChromeTEMP"
-        chrome_options.add_experimental_option('debuggerAddress', '127.0.0.1:9222')
+        # # 포트 9222로 열어둔(VPN 확장프로그램 설치 및 로그인해 놓은) 크롬창에서 디버그 모드로 실행
+        # # 9222포트로 크롬 실행 맥 터미널
+        # # /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="/ChromeProfile"
+        # # 윈도우 실행창
+        # # C:\Program Files (x86)\Google\Chrome\Application\chrome.exe --remote-debugging-port=9222 --user-data-dir="C:/ChromeTEMP"
+        # # 혹은
+        # # C:\Program Files\Google\Chrome\Application\chrome.exe --remote-debugging-port=9222 --user-data-dir="C:/ChromeTEMP"
+        # chrome_options.add_experimental_option('debuggerAddress', '127.0.0.1:9222')
 
-        # chrome_options.add_argument("--headless") # 크롬창이 열리지 않음
-        # chrome_options.add_argument("--no-sandbox")  # GUI를 사용할 수 없는 환경에서 설정. linux, docker 등
-        # chrome_options.add_argument("--disable-gpu")  # GUI를 사용할 수 없는 환경에서 설정. linux, docker 등
-        # chrome_options.add_argument(f"--window-size={window_size}")
-        # chrome_options.add_argument('Content-Type=application/json; charset=utf-8')
-        # chrome_options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.1 Safari/605.1.15")
+        chrome_options.add_argument("--headless") # 크롬창이 열리지 않음
+        chrome_options.add_argument("--no-sandbox")  # GUI를 사용할 수 없는 환경에서 설정. linux, docker 등
+        chrome_options.add_argument("--disable-gpu")  # GUI를 사용할 수 없는 환경에서 설정. linux, docker 등
+        chrome_options.add_argument(f"--window-size={window_size}")
+        chrome_options.add_argument('Content-Type=application/json; charset=utf-8')
+        chrome_options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.1 Safari/605.1.15")
         self.driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
         self.driver.implicitly_wait(3)  # 웹 자원 로드 위해 3초 대기
 
@@ -62,21 +64,44 @@ class CrawlingBigkinds:
                             '//*[@id="news-detail-modal"]/div/div/div[1]/div/div[4]/ul/li[3]/dd/a'
                             ]
 
+    @property
+    def keyword(self):
+        return self._keyword
+
+    @keyword.setter
+    def keyword(self, value):
+        self._keyword = value
+
+    @property
+    def start_date(self):
+        return self._start_date
+
+    @start_date.setter
+    def start_date(self, value):
+        self._start_date = value
+
+    @property
+    def end_date(self):
+        return self._end_date
+
+    @end_date.setter
+    def end_date(self, value):
+        self._end_date = value
+
+    # 상태 1인 파일있으면 리턴 추가
     def check_exist_file(self):
-        if os.path.exists(self.file_name):
-            exist_file = pd.read_csv(self.file_name)
-            exist_index = len(exist_file.index)
-            print(f'기존 파일이 존재합니다. 행 수: {exist_index}')
-            # print('exist_file len: ', len(exist_file.index))
+        print(self.file_name)
+        if os.path.isfile(f'{self.save_path}{self.file_name}_0.csv'):
+            exist_df = pd.read_csv(f'{self.file_name}_0.csv')
+            exist_index = len(exist_df.index)
+            print(f'작업 중인 파일이 존재합니다. 행 수: {exist_index}')
             start_page = int(exist_index / self.listnum + 1)
             start_list = exist_index % self.listnum
         else:
             start_page = 1
             start_list = 1
-        return start_page, start_list
-
-    def claculate_start(self):
-        bigkinds.check_exist_file()
+            exist_df = pd.DataFrame(columns=["title", "category", "date", "content"])
+        return start_page, start_list, exist_df
 
     def search_keyword(self):
         # 처음에 상세검색으로 날짜 지정하고 검색 시작 -첫화면url로 시작, 상세검색 클릭 후 날짜 먼저 지정
@@ -258,30 +283,34 @@ class CrawlingBigkinds:
         return results, state
 
     # 데이터가 많을 경우 데이터프레임이 속도가 더 빠를 것으로 추정됨
-    def save_to_csv(self, results, **kwargs):
-        file_name = self.file_name
-        # 파일이름 입력 받은 경우 입력 받은 이름으로 할당
-        if 'file_name' in kwargs:
-            file_name = kwargs.get('file_name')
-        file = open(f"{file_name}", mode = "w")
-        writer = csv.writer(file)
-        writer.writerow(["title", "category", "date", "content"])
-        for result in results:
-            writer.writerow(list(result.values()))
+    def save_to_csv(self, exist_df, results, state):
+        # 기존 데이터프레임과 새로 크롤링한 데이터프레임 결합
+        result_df = exist_df.append(pd.Series(results, index=exist_df.columns), ignore_index=True)
+        # 기존 진행중 파일 삭제
+        os.remove(f'{self.save_path}{self.file_name}_0.csv')
+        # 결합한 데이터 프레임 저장
+        result_df.to_csv(f'{self.save_path}{self.file_name}_{state}.csv', encoding = 'utf-8')
+        # file = open(f"{file_name}", mode="w")
+        # writer = csv.writer(file)
+        # writer.writerow(["title", "category", "date", "content"])
+        # for result in results:
+        #     writer.writerow(list(result.values()))
         print('file saved')
         return
 
 
 if __name__ == '__main__':
-    bigkinds = CrawlingBigkinds(keyword='에그타르트', start_date='20210901', end_date='20211130') # init에 기본값 설정하고 set함수 만들기
-    result_number = bigkinds.search_keyword()
-    # start_page, start_list = bigkinds.check_exist_file()
+    bigkinds = CrawlingBigkinds()  # init에 기본값 설정해놓고 set함수 만들기
+    # print(bigkinds.check_exist_file())
+    start_page, start_list, exist_df = bigkinds.check_exist_file()
     # print(start_page, start_list)
-    # results, state = bigkinds.crawling_contents(start_page, start_list)
-    results, state = bigkinds.crawling_contents(2, 2)
-
+    result_number = bigkinds.search_keyword()
+    # print(result_number)
+    results, state = bigkinds.crawling_contents(start_page, start_list)
     print(f'총 검색 결과: {result_number}, results 길이: {len(results)}, 상태: {state}')
-    bigkinds.save_to_csv(results) # csv 저장 전에 판다스로 전환 후 저장. 중간 취소되면 저장 이름에 반영. 완료되면 이름 바꾸고 원래 것 지움
+    # results = ['','','', '']
+    # state = 1
+    bigkinds.save_to_csv(exist_df, results, state)
 
     # ==처음에 상세검색으로 날짜 지정하고 검색 시작 -첫화면url로 시작, 상세검색 클릭 후 날짜 먼저 지정==
     # csv name = 키워드_출처_시작날짜_끝날짜, 변수로 총 개수, 상태(실패 0, 정상 1)까지 반환
@@ -291,4 +320,7 @@ if __name__ == '__main__':
     # 해당 제목으로 된 csv파일이 있는지 체크, 있으면 길이가 몇개인지 확인 후 시작 페이지, 인덱스 계산
 
     # jira
-    # git
+    # git 올리기, 상미씨 초대
+    # 주석으로 누가 언제 무슨 이유로 무엇을 수정했다고 기록
+    # 내 소스 정리 - 대현씨 소스 형식 맞춰서
+
