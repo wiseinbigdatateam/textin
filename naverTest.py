@@ -83,6 +83,21 @@ def find_page_count(text):
     return page_count
 
 
+def set_driver(webdriver):
+    window_size = "1200,800"
+    chrome_options = Options()
+    # chrome_options.add_argument('headless') # 창 안뜨게
+    chrome_options.add_argument(f"--window-size={window_size}")  # 창 사이즈
+    driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
+    driver.implicitly_wait(10)  # 페이지 로딩될때까지 최대 몇초까지 기다릴것인지
+    url = open_site_re(driver).current_url
+    driver.implicitly_wait(15)
+    driver.get(url)
+    time.sleep(1)
+
+    return driver, url
+
+
 def content_crawling():
     start_time = time.time()
 
@@ -91,17 +106,7 @@ def content_crawling():
     return_url_list = []
     count_num = 0
 
-    window_size = "1200,800"
-    chrome_options = Options()
-    # chrome_options.add_argument('headless') # 창 안뜨게
-    chrome_options.add_argument(f"--window-size={window_size}")  # 창 사이즈
-
-    driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
-    driver.implicitly_wait(10)  # 페이지 로딩될때까지 최대 몇초까지 기다릴것인지
-    url = open_site_re(driver).current_url
-    driver.implicitly_wait(15)
-    driver.get(url)
-    time.sleep(1)
+    driver, url = set_driver(webdriver) # 셀레니움 드라이버 설정
 
     page_num_text = driver.find_element_by_xpath(xpath_root.page_all_text).text
     page_count = find_page_count(page_num_text) # 페이지 수 파악

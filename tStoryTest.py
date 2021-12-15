@@ -87,6 +87,21 @@ def find_page_count(text):
     return page_count
 
 
+def set_driver(webdriver):
+    window_size = "1200,800"
+    chrome_options = Options()
+    # chrome_options.add_argument('headless')  # 창 안뜨게
+    chrome_options.add_argument(f"--window-size={window_size}")  # 창 사이즈
+    driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
+    driver.implicitly_wait(10)  # seconds
+    url = open_site(driver).current_url
+    driver.implicitly_wait(15)
+    driver.get(url)
+    time.sleep(1)
+
+    return driver, url
+
+
 def tistory_url_crwaling():
     startTime = time.time()
     # 타이틀, url, 횟수
@@ -94,23 +109,10 @@ def tistory_url_crwaling():
     return_url_list = []
     count_num = 0
 
-    window_size = "1200,800"
-    chrome_options = Options()
-    # chrome_options.add_argument('headless')  # 창 안뜨게
-    chrome_options.add_argument(f"--window-size={window_size}")  # 창 사이즈
-    # 셀레니움 옵션 종류, 기능 파악 정리하기
-
-    driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
-    driver.implicitly_wait(10)  # seconds
-    url = open_site(driver).current_url
-    driver.implicitly_wait(15)
-    driver.get(url)
+    driver, url = set_driver(webdriver)  # 셀레니움 드라이버 설정
 
     page_num_text = driver.find_element_by_xpath(xpath_root.page_all_text).text
-    print(page_num_text)
     page_count = find_page_count(page_num_text)
-    if page_count == 0:
-        page_count = 1
     print("총 페이지 : ", page_count)
 
     if os.path.isfile(csvFileName):
