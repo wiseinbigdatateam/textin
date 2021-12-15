@@ -192,11 +192,10 @@ def main_crawling(data):
     except_title_list = []
     except_url_list = []
 
-    for i in range(0, num_list):
-        temp_pass_count = pass_count
-        url = url_load['url'][i]
-
-        try:
+    try:
+        for i in range(0, num_list):
+            temp_pass_count = pass_count
+            url = url_load['url'][i]
             driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
             driver.get(url)
 
@@ -232,35 +231,31 @@ def main_crawling(data):
                 except_url_list.append(url_load['url'][i])
                 pass_count += 1
                 pass
+            # driver.close()
+            # 일부 빈값에서 중복 입력방지 초기화
+            title = ''
+            wTime = ''
+            main_post = ''
+            print(f"메인 크롤링 {crawling_count}회")
+            print(f"pass {pass_count}회")
+            # print(temp_pass_count)
+            if pass_count != temp_pass_count:
+                print(f"제외 인덱스 Num : {except_idx_list}")
+                print(f"제외 인덱스 title : {except_title_list}")
+                print(f"제외 인덱스 url : {except_url_list}")
 
-        except:
-            print(f"크롤링 실패. 인덱스 : {i}")
-            print(f"제목 : {url_load['title'][i]}, url :  {url_load['url'][i]}")
-            except_idx_list.append(i)
-            except_title_list.append(url_load['title'][i])
-            except_url_list.append(url_load['url'][i])
-            pass_count += 1
-            middle_df = pd.DataFrame(
-                {'title': blog_title_list, 'date': blog_time_lsit, 'text': blog_post_list, 'url': blog_url_list})
-            df_save_csv(middle_df, mainCsvFileName)
-            pass
+    except:
+        print(f"크롤링 실패. 인덱스 : {i}")
+        print(f"제목 : {url_load['title'][i]}, url :  {url_load['url'][i]}")
+        except_idx_list.append(i)
+        except_title_list.append(url_load['title'][i])
+        except_url_list.append(url_load['url'][i])
+        pass_count += 1
 
-        # driver.close()
-        # 일부 빈값에서 중복 입력방지 초기화
-        title = ''
-        wTime = ''
-        main_post = ''
-        print(f"메인 크롤링 {crawling_count}회")
-        print(f"pass {pass_count}회")
-        # print(temp_pass_count)
-        if pass_count != temp_pass_count:
-            print(f"제외 인덱스 Num : {except_idx_list}")
-            print(f"제외 인덱스 title : {except_title_list}")
-            print(f"제외 인덱스 url : {except_url_list}")
-
-    last_df = pd.DataFrame(
-        {'title': blog_title_list, 'date': blog_time_lsit, 'text': blog_post_list, 'url': blog_url_list})
-    df_save_csv(last_df, mainCsvFileName)
+    finally:
+        last_df = pd.DataFrame(
+            {'title': blog_title_list, 'date': blog_time_lsit, 'text': blog_post_list, 'url': blog_url_list})
+        df_save_csv(last_df, mainCsvFileName)
 
 
 if __name__ == '__main__':

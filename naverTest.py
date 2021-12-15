@@ -211,11 +211,11 @@ def main_crawling(data):
     else:
         start_point = 0
 
-    for i in range(start_point, num_list):
-        temp_pass_count = pass_count
-        url = url_load['url'][i]
-        original_url = url  # 원래 url을 기억
-        try:
+    try:
+        for i in range(start_point, num_list):
+            temp_pass_count = pass_count
+            url = url_load['url'][i]
+            original_url = url  # 원래 url을 기억
             url = rework_content.delete_iframe(url) # url 재정리
             driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
             driver.get(url)
@@ -254,25 +254,21 @@ def main_crawling(data):
                 # 본문 내용만 있어나 한것도 별도로 저장하기
                 pass
             driver.implicitly_wait(10)
+            print(f"메인 크롤링 {crawling_count}회")
+            print(f"pass {pass_count}회")
+            if pass_count != temp_pass_count:
+                # print(f"제외 인덱스 Num : {except_idx_list}")
+                print(f"제외 인덱스 title : {except_title_list}")
+                print(f"제외 인덱스 url : {except_url_list}")
 
-        except:
-            print(f"네이버 블로그가 아닙니다. 인덱스 : {i}")
-            pass_count += 1
-            middle_df = pd.DataFrame(
-                {'title': blog_title_list, 'date': blog_time_list, 'text': blog_post_list, 'url': blog_url_list})
-            df_save_csv(middle_df, mainCsvFileName)
-            pass
-        # driver.close()
-        print(f"메인 크롤링 {crawling_count}회")
-        print(f"pass {pass_count}회")
-        if pass_count != temp_pass_count:
-            # print(f"제외 인덱스 Num : {except_idx_list}")
-            print(f"제외 인덱스 title : {except_title_list}")
-            print(f"제외 인덱스 url : {except_url_list}")
+    except:
+        print(f"네이버 블로그가 아닙니다. 인덱스 : {i}")
+        pass_count += 1
 
-    last_df = pd.DataFrame(
-        {'title': blog_title_list, 'date': blog_time_list, 'text': blog_post_list, 'url': blog_url_list})
-    df_save_csv(last_df, mainCsvFileName)
+    finally:
+        last_df = pd.DataFrame(
+            {'title': blog_title_list, 'date': blog_time_list, 'text': blog_post_list, 'url': blog_url_list})
+        df_save_csv(last_df, mainCsvFileName)
 
 
 if __name__ == '__main__':
