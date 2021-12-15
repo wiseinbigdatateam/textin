@@ -74,6 +74,15 @@ def open_site_re(driver):
     return driver
 
 
+# 검색 결과에 따른 총 페이지 수 파악
+def find_page_count(text):
+    page_num = int(text.replace(",", '').replace("건", ""))
+    page_count = int(page_num / 7) + 1
+    if page_count == 0:
+        page_count = 1
+    return page_count
+
+
 def content_crawling():
     start_time = time.time()
 
@@ -95,11 +104,7 @@ def content_crawling():
     time.sleep(1)
 
     page_num_text = driver.find_element_by_xpath(xpath_root.page_all_text).text
-    page_num = int(page_num_text.replace(",", '').replace("건", ""))
-    print(page_num)
-    page_count = int(page_num / 7) + 1
-    if page_count == 0:
-        page_count = 1
+    page_count = find_page_count(page_num_text) # 페이지 수 파악
     print("총 페이지 : ", page_count)
 
     # 수집중 중단 되었을때 다시 시작하기 위한 조건
@@ -154,7 +159,7 @@ def content_crawling():
         driver.close()
 
     except Exception as ex:
-        print("크롤링 종료", ex)
+        print("크롤링 종료")
 
     finally:
         endTime = time.time()
@@ -162,7 +167,6 @@ def content_crawling():
         print(f"url 소요시간 : {endTime - start_time:.5f} 초")
         first_df = pd.DataFrame(data={'title': return_title_list, 'url': return_url_list})
         # print("first_df : ", first_df)
-        # df_save_csv(first_df, csvFileName)
         return df_save_csv(first_df, csvFileName)
 
 
