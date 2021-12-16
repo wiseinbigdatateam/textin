@@ -194,8 +194,24 @@ def main_crawling(data):
     except_title_list = []
     except_url_list = []
 
+    # 파일 유무확인하고 있을시에 전체 길이를 확인, 시작값 변경
+    if os.path.isfile(mainCsvFileName):
+        # print("동일명 파일 있음")
+        re_url_load = pd.read_csv(mainCsvFileName)
+        restart_url = re_url_load['url'][-1:].values
+        url = restart_url[0]
+        csv_file = pd.read_csv(csvFileName)['url']
+        start_point = csv_file.index[csv_file == url].tolist()
+        start_point = int(start_point[0]) + 1
+        # print("start_point : ", start_point)
+        if start_point + 1 >= num_list:
+            print("완료된 파일, 확인필요")
+            sys.exit(0)
+    else:
+        start_point = 0
+
     try:
-        for i in range(0, num_list):
+        for i in range(start_point, num_list):
             temp_pass_count = pass_count
             url = url_load['url'][i]
             driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
