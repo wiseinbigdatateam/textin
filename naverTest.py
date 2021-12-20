@@ -38,6 +38,7 @@ mainCsvFileName = f"{qText}_네이버블로그_{start_date}_{end_date}"  # 최�
 xpath_root = Naver_blog_xpath()  # xpath 경로
 find_content = FindNaverContents()  # 크롤링 데이터 탐색 부분
 rework_content = ReworkContents()  # 전처리 부분
+# state = 5
 
 
 # 검색 결과에 따른 총 페이지 수 파악
@@ -50,8 +51,9 @@ def find_page_count(text):
 
 
 def content_crawling():
+    state = 0
     start_time = time.time()
-
+    # global state
     # 타이틀, url, 횟수
     return_title_list = []
     return_url_list = []
@@ -65,7 +67,7 @@ def content_crawling():
 
     # 수집중 중단 되었을때 다시 시작하기 위한 조건
     if os.path.isfile(f"{csvFileName}_0.csv"):
-        print("동일 url.csv 파일 존재")
+        print("중단된 url.csv 파일 존재")
         exist_df = pd.read_csv(f"{csvFileName}_0.csv")
         url_start_count = len(exist_df)
         # print(url_start_count)
@@ -98,7 +100,7 @@ def content_crawling():
                 post_url = post.attrs['href']
 
                 # 중복체크
-                if post_url not in return_url_list or post_ti not in return_title_list:
+                if post_url not in return_url_list and post_ti not in return_title_list:
                     return_title_list.append(post_ti)
                     return_url_list.append(post_url)
 
@@ -106,7 +108,7 @@ def content_crawling():
 
             now_page = driver.current_url.split("&")[0][-1]
             next_page_num = (int(now_page)) % 10 + 1
-            print("next_page_num : ", next_page_num, ", i : ", i)
+            # print("next_page_num : ", next_page_num, ", i : ", i)
 
             if next_page_num == 1:
                 if driver.find_element_by_link_text("다음"):
@@ -119,8 +121,9 @@ def content_crawling():
                     """//*[@id="content"]/section/div[3]/span[""" + str(next_page_num) + "]/a").click()
                 time.sleep(1)
 
-        print("state setting")
-        state = 1
+            print("state setting")
+            state = 1
+            print("state ", state)
 
             # if next_page_num != 1 and next_page_num != 0:
             #     driver.find_element_by_xpath(
@@ -135,15 +138,17 @@ def content_crawling():
             #     time.sleep(1)
 
     except Exception as ex:
-        print(ex)
+        # print(ex)
         print("크롤링 종료")
+        print("state ", state)
         state = 0
 
     finally:
-        print("state = ", state)
+        # print("state = ", state)
         endTime = time.time()
         print("url 크롤링 수 : ", count_num)
         print(f"url 소요시간 : {endTime - start_time:.5f} 초")
+        print("state ", state)
         first_df = pd.DataFrame(data={'title': return_title_list, 'url': return_url_list})
         first_csv = df_save_csv(first_df, csvFileName, state, exist_df)
         return first_csv, driver, exist_df
@@ -159,6 +164,10 @@ def xpath_is_exist(driver, xpath):
 
 
 def main_crawling(data, driver, ex_df):
+    if not os.path.isfile(f"{csvFileName}_1.csv"):
+        print(f"{csvFileName}_1.csv 파일이 존재하지 않음")
+        driver.close()
+        sys.exit()
     # 크롤링 한 결과를 담아 두는 리스트
     blog_title_list = []
     blog_time_list = []
@@ -175,10 +184,10 @@ def main_crawling(data, driver, ex_df):
     pass_count = 0
 
     # 셀레니움 설정 옵션
-    window_size = "1200,1200"
-    chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument(f"--window-size={window_size}")
+    # window_size = "1200,1200"
+    # chrome_options = Options()
+    # chrome_options.add_argument('--headless')
+    # chrome_options.add_argument(f"--window-size={window_size}")
 
     url_load = pd.read_csv(data)
     num_list = len(url_load)
@@ -186,8 +195,8 @@ def main_crawling(data, driver, ex_df):
     # 파일 유무확인하고 있을시에 전체 길이를 확인, 시작값 변경
     if os.path.isfile(f"{mainCsvFileName}_2.csv"):
         # print("동일명 파일 있음")
-        re_url_load = pd.read_csv(f"{mainCsvFileName}_2.csv")
-        restart_url = re_url_load['url'][-1:].values
+        exist_df_1 = pd.read_csv(f"{mainCsvFileName}_2.csv")
+        restart_url = exist_df_1['url'][-1:].values
         url = restart_url[0]
         csv_file = pd.read_csv(f"{csvFileName}_1.csv")['url']
         start_point = csv_file.index[csv_file == url].tolist()
@@ -257,7 +266,7 @@ def main_crawling(data, driver, ex_df):
     finally:
         last_df = pd.DataFrame(
             {'title': blog_title_list, 'date': blog_time_list, 'text': blog_post_list, 'url': blog_url_list})
-        df_save_csv(last_df, mainCsvFileName, state, ex_df)
+        df_save_csv(last_df, mainCsvFileName, state, exist_df_1)
         driver.close()
 
 
