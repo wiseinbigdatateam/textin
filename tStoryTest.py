@@ -9,6 +9,7 @@ import datetime
 import requests as requests
 import tqdm
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 from csv import writer
@@ -115,22 +116,29 @@ def tistory_url_crwaling():
     page_count = find_page_count(page_num_text)
     print("총 페이지 : ", page_count)
 
-    if os.path.isfile(csvFileName):
-        print("동일 url.csv 파일 존재")
-        url_count = pd.read_csv(csvFileName)
-        url_start_count = len(url_count)
+    if os.path.isfile(f"{csvFileName}_0.csv"):
+        print("중단된 url.csv 파일 존재")
+        exist_df = pd.read_csv(f"{csvFileName}_0.csv")
+        url_start_count = len(exist_df)
         # print(url_start_count)
         re_start_page = int(url_start_count / 10) + 1
         if re_start_page != page_count:
             url_1 = url[:102]
             url = url_1 + f"{re_start_page}"
             driver.get(url)
-        elif re_start_page >= page_count:
-            print("url 수집 완료.csv 파일")
-            return csvFileName
+            start_page = re_start_page
+
+    elif os.path.isfile(f"{csvFileName}_1.csv"):
+        print("url 수집 완료.csv 파일")
+        exist_df = pd.DataFrame(columns=["title", "url"])
+        return f"{csvFileName}_1.csv", driver, exist_df
+    else:
+        exist_df = pd.DataFrame(columns=["title", "url"])
+        start_page = 0
+    time.sleep(1)
 
     try:
-        for page in range(page_count):
+        for page in range(start_page, page_count):
             html = driver.page_source
             soup = BeautifulSoup(html, 'html.parser')
             post_list = soup.findAll("a", class_="f_link_b")
@@ -154,10 +162,13 @@ def tistory_url_crwaling():
             if last_page != page_count:
                 driver.find_element_by_xpath(xpath_root.next_page_button).click()
                 print(f"{last_page}에서 다음페이지로")
+
             time.sleep(0.5)
+            state = 1
 
     except:
         print("크롤링 종료")
+        state = 0
 
     finally:
         endTime = time.time()
@@ -165,16 +176,16 @@ def tistory_url_crwaling():
         print(f"url 소요시간 : {endTime - startTime:.5f} 초")
         # print("first_df : ", first_df)
         first_df = pd.DataFrame({'title': return_title_list, 'url': return_url_list})
-        first_csv = df_save_csv(first_df, csvFileName)
-        return first_csv
+        first_csv = df_save_csv(first_df, csvFileName, state, exist_df)
+        return first_csv, driver, exist_df
 
 
-def main_crawling(data):
+def main_crawling(data, driver, ex_df):
     # 셀레니움 설정 옵션
-    window_size = "1200,1200"
-    chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument(f"--window-size={window_size}")
+    # window_size = "1200,1200"
+    # chrome_options = Options()
+    # chrome_options.add_argument('--headless')
+    # chrome_options.add_argument(f"--window-size={window_size}")
 
     # 로그 파일 만들어서처리하기
     crawling_count = 0
@@ -195,18 +206,18 @@ def main_crawling(data):
     except_url_list = []
 
     # 파일 유무확인하고 있을시에 전체 길이를 확인, 시작값 변경
-    if os.path.isfile(mainCsvFileName):
+    if os.path.isfile(f"{mainCsvFileName}_2.csv"):
         # print("동일명 파일 있음")
-        re_url_load = pd.read_csv(mainCsvFileName)
+        re_url_load = pd.read_csv(f"{mainCsvFileName}_2.csv")
         restart_url = re_url_load['url'][-1:].values
         url = restart_url[0]
-        csv_file = pd.read_csv(csvFileName)['url']
+        csv_file = pd.read_csv(f"{csvFileName}_1.csv")['url']
         start_point = csv_file.index[csv_file == url].tolist()
         start_point = int(start_point[0]) + 1
         # print("start_point : ", start_point)
-        if start_point + 1 >= num_list:
-            print("완료된 파일, 확인필요")
-            sys.exit(0)
+    elif os.path.isfile(f"{mainCsvFileName}_3.csv"):
+        print("완료된 파일, 확인필요")
+        sys.exit(0)
     else:
         start_point = 0
 
@@ -214,7 +225,7 @@ def main_crawling(data):
         for i in range(start_point, num_list):
             temp_pass_count = pass_count
             url = url_load['url'][i]
-            driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
+            # driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
             driver.get(url)
 
             html = driver.page_source
@@ -261,6 +272,7 @@ def main_crawling(data):
                 print(f"제외 인덱스 Num : {except_idx_list}")
                 print(f"제외 인덱스 title : {except_title_list}")
                 print(f"제외 인덱스 url : {except_url_list}")
+        state = 3
 
     except:
         print(f"크롤링 실패. 인덱스 : {i}")
@@ -269,11 +281,13 @@ def main_crawling(data):
         except_title_list.append(url_load['title'][i])
         except_url_list.append(url_load['url'][i])
         pass_count += 1
+        state = 2
 
     finally:
         last_df = pd.DataFrame(
             {'title': blog_title_list, 'date': blog_time_lsit, 'text': blog_post_list, 'url': blog_url_list})
-        df_save_csv(last_df, mainCsvFileName)
+        df_save_csv(last_df, mainCsvFileName, state, ex_df)
+        driver.close()
 
 
 if __name__ == '__main__':
@@ -281,8 +295,8 @@ if __name__ == '__main__':
     startTime = time.time()
 
     # DateFreme로 동작하는 부분
-    first_df = tistory_url_crwaling()
-    main_crawling(first_df)
+    first_data, cdriver, exist_df = tistory_url_crwaling()
+    main_crawling(first_data, cdriver, exist_df)
 
     endTime = time.time()
     print(f"소요시간 : {endTime - startTime:.5f} 초")
