@@ -3,6 +3,8 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import *
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.action_chains import ActionChains
+
 
 import os
 import time
@@ -14,7 +16,10 @@ from bigkinds.xpath import BigkindsXpath as xpath
 
 
 class Bigkinds:
-    def __init__(self):
+    def __init__(self, keyword, start_date, end_date, ):
+        self._keyword = keyword
+        self._start_date = start_date
+        self._end_date = end_date
         self.driver = Webdriver().driver
         self.listnum = 10  # 10 기본, 30, 50, 100 선택 가능
         self.url = 'https://www.bigkinds.or.kr/'
@@ -41,16 +46,16 @@ class Bigkinds:
         end_box = self.driver.find_element(By.XPATH, xpath.end_xpath)
         search_box = self.driver.find_element(By.XPATH, xpath.keyword_xpath)
         # start_box.clear()로 기존 값을 지우면 자동으로 기본값 1990.01.01로 입력됨exist_dfreturn키로 하나씩 값을 지워야 함.
-        actions = self.driver.ActionChains(self.driver) \
+        actions = ActionChains(self.driver) \
             .send_keys_to_element(start_box, Keys.RETURN) \
             .send_keys_to_element(start_box, Keys.RETURN) \
             .send_keys_to_element(start_box, Keys.RETURN) \
-            .send_keys_to_element(start_box, self.start_date) \
+            .send_keys_to_element(start_box, self._start_date) \
             .send_keys_to_element(end_box, Keys.RETURN) \
             .send_keys_to_element(end_box, Keys.RETURN) \
             .send_keys_to_element(end_box, Keys.RETURN) \
-            .send_keys_to_element(end_box, self.end_date) \
-            .send_keys_to_element(search_box, self.keyword) \
+            .send_keys_to_element(end_box, self._end_date) \
+            .send_keys_to_element(search_box, self._keyword) \
             .send_keys(Keys.ENTER)
         actions.perform()
         time.sleep(2)
@@ -96,7 +101,7 @@ class Bigkinds:
         page_num_box = self.driver.find_element(By.XPATH, xpath.page_num_xpath)
         page_num_box.clear()
         time.sleep(0.5)
-        actions = self.webdriver.ActionChains(self.driver) \
+        actions = ActionChains(self.driver) \
             .send_keys_to_element(page_num_box, i) \
             .send_keys(Keys.ENTER)
         actions.perform()
@@ -120,20 +125,34 @@ class Bigkinds:
     # 모달 본문 크롤링
     # 페이지 수를 받아와서 해당 페이지 본문 크롤링하고 리턴
     def crawling_modal(self, start, last):
-        results = []
-        print(f'------crawling body start: {start}, last: {last}------')
+        # 결과 저장을 위한 리스트
+        modal_title_list = []
+        modal_date_list = []
+        modal_content_list = []
+        modal_url_list = []
+
+        print(f'------본문 모달창 크롤링 시작: 인덱스 {start}부터 {last}까지------')
         state = 2
-        count = 3
+        count = 0
+        pass_count = 0
         try:
             for i in range(start, last+1):
                 title = self.driver.find_element(By.XPATH, xpath.title_xpath).text
                 # category = self.driver.find_element(By.XPATH, xpath.category_xpath).text
                 date = self.driver.find_element(By.XPATH, xpath.date_xpath).text
                 content = self.driver.find_element(By.XPATH, xpath.content_xpath).text
-                results.append({'title': title, 'date': date, 'content': content, 'url': ''})
 
+                if title != '' and date != '' and content != '':
+                    modal_title_list.append(title)
+                    modal_date_list.append(date)
+                    modal_content_list.append(content)
+                    modal_url_list.append('')
+                    count += 1
+                # results.append({'title': title, 'date': date, 'content': content, 'url': ''})
+                else:
+                    pass_count += 1
+                    pass
                 # 건 수 카운팅
-                count += 1
                 if count % 10 == 0:
                     print(f'{count}건을 가져왔습니다.')
 
@@ -149,33 +168,29 @@ class Bigkinds:
             state = 2
 
         finally:
-            return results, count, state, 3
+            return modal_title_list, modal_date_list, modal_content_list, modal_url_list, count, state, 1
 
-    def crawling_body(self, df, index):
-        state = 2
-        results = []
+    def crawling_body(self, df, index, state):
+        print(f'state: {state}')
+        results_title = []
+        results_date = []
+        results_content = []
+        results_url = []
+
+        # 기존 파일 인덱스로 시작 페이지, 시작 목록 계산(없으면 1, 1)
         start_page, start_list = self.set_start_point(index)
+        # 사이트 접속해 키워드 검색 후 검색 결과 수로 총 페이지 수와 마지막 페이지의 목록 개수 계산
         result_number = self.search_keyword()
         total_page = int(result_number/self.listnum + 1)
         last_list = result_number % self.listnum
-        print(f'-총 페이지 수: {total_page}페이지, '
-              f'-시작 페이지: {start_page}페이지, '
+        print(f'검색 결과: {result_number}건, '
               f'-한 페이지 게시글 수: {self.listnum}개, '
+              f'-총 페이지 수: {total_page}페이지, '
+              f'-시작 페이지: {start_page}페이지, '
               f'-첫 페이지 시작 게시글: {start_list}번째, '
               f'-마지막 페이지 끝 게시글: {last_list}번째')
 
-        # if start_page > total_page:
-        #     print("시작 페이지가 총 페이지 수보다 큽니다.")
-        #     return
-        #
-        # if start_list > self.listnum:
-        #     print("시작 리스트 인덱스가 설정한 건 수보다 큽니다.")
-        #     return
-        #
-        # if start_page == total_page and start_list > last_list:
-        #     print("시작 리스트 인덱스가 마지막 리스트 인덱스보다 큽니다.")
-        #     return
-
+        # 페이지 단위 크롤링 시작
         start = time.time()
         for i in range(start_page, total_page+1):
             page_start = time.time()
@@ -184,55 +199,61 @@ class Bigkinds:
 
             # 크롤링을 시작할 게시글 클릭
             print('start_list: ', start_list)
-            first_title_xpath = f'//*[@id="news-results"]/div[{start_list}]/div/div[2]/a'  ### 이건 어떻게 빼지?
+            first_title_xpath = f'//*[@id="news-results"]/div[{start_list}]/div/div[2]/a'
             self.driver.find_element(By.XPATH, first_title_xpath).click()
             time.sleep(1)
 
             # 마지막 페이지
             if i == total_page:
                 print(f'마지막 페이지 크롤링 시작: {total_page}페이지')
-                modal_results, modal_index, state, start_list = self.crawling_modal(start_list, last_list)
+                modal_title_list, modal_date_list, modal_content_list, modal_url_list, modal_index, state, start_list = self.crawling_modal(start_list, last_list)
+                state = 3
             else:
-                modal_results, modal_index, state, start_list = self.crawling_modal(start_list, self.listnum)
+                modal_title_list, modal_date_list, modal_content_list, modal_url_list, modal_index, state, start_list = self.crawling_modal(start_list, self.listnum)
+                state = 3
 
-            results.extend(modal_results)
+            results_title.extend(modal_title_list)
+            results_date.extend(modal_date_list)
+            results_content.extend(modal_content_list)
+            results_url.extend(modal_url_list)
 
             page_end = time.time()
-            print(f'---{i}페이지 완료, -걸린 시간: {page_end - page_start}, -건 수: {modal_index}')
-            i += 1
+            print(f'---{i}페이지 완료, -크롤링 건 수: {modal_index}, -걸린 시간: {page_end - page_start}')
+            # i += 1
+        results_df = pd.DataFrame({'title': results_title, 'date': results_date, 'text': results_content, 'url': results_url})
         end = time.time()
         print('Entire Crawling Time: ', end - start)
 
         # 크롬드라이버 종료
         self.driver.close()
-        return results, state
+        return results_df, state
 
-    # 데이터가 많을 경우 데이터프레임이 속도가 더 빠를 것으로 추정됨
-    def save_to_csv(self, exist_df, results, state):
-        # 기존 데이터프레임과 새로 크롤링한 데이터프레임 결합
-        result_df = exist_df.append(pd.Series(results, index=exist_df.columns), ignore_index=True)
-        # 기존 진행중 파일 삭제
-        os.remove(f'{self.save_path}{self.file_name}_0.csv')
-        # 결합한 데이터 프레임 저장
-        result_df.to_csv(f'{self.save_path}{self.file_name}_{state}.csv', encoding = 'utf-8')
-        # file = open(f"{file_name}", mode="w")
-        # writer = csv.writer(file)
-        # writer.writerow(["title", "category", "date", "content"])
-        # for result in results:
-        #     writer.writerow(list(result.values()))
-        print('file saved')
-        return
+    # # 데이터가 많을 경우 데이터프레임이 속도가 더 빠를 것으로 추정됨
+    # def save_to_csv(self, exist_df, results, state):
+    #     # 기존 데이터프레임과 새로 크롤링한 데이터프레임 결합
+    #     result_df = exist_df.append(pd.Series(results, index=exist_df.columns), ignore_index=True)
+    #     # 기존 진행중 파일 삭제
+    #     os.remove(f'{self.save_path}{self.file_name}_0.csv')
+    #     # 결합한 데이터 프레임 저장
+    #     result_df.to_csv(f'{self.save_path}{self.file_name}_{state}.csv', encoding = 'utf-8')
+    #     # file = open(f"{file_name}", mode="w")
+    #     # writer = csv.writer(file)
+    #     # writer.writerow(["title", "category", "date", "content"])
+    #     # for result in results:
+    #     #     writer.writerow(list(result.values()))
+    #     print('file saved')
+    #     return
 
 
-if __name__ == '__main__':
-    bigkinds = Bigkinds()  # init에 기본값 설정해놓고 set함수 만들기
-    # print(bigkinds.check_exist_file())
-    start_page, start_list, exist_df = bigkinds.check_exist_file()
-    # print(start_page, start_list)
-    result_number = bigkinds.search_keyword()
-    # print(result_number)
-    results, state = bigkinds.crawling_modal(start_page, start_list)
-    print(f'총 검색 결과: {result_number}, results 길이: {len(results)}, 상태: {state}')
-    # results = ['','','', '']
-    # state = 1
-    bigkinds.save_to_csv(exist_df, results, state)
+# if __name__ == '__main__':
+    # bigkinds = Bigkinds()  # init에 기본값 설정해놓고 set함수 만들기
+    # # print(bigkinds.check_exist_file())
+    # start_page, start_list, exist_df = bigkinds.check_exist_file()
+    # # print(start_page, start_list)
+    # result_number = bigkinds.search_keyword()
+    # # print(result_number)
+    # results, state = bigkinds.crawling_modal(start_page, start_list)
+    # print(f'총 검색 결과: {result_number}, results 길이: {len(results)}, 상태: {state}')
+    # # results = ['','','', '']
+    # # state = 1
+    # bigkinds.save_to_csv(exist_df, results, state)

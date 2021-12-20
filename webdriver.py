@@ -2,7 +2,6 @@ import crawlingconfig
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-
 class Webdriver:
     def __init__(self):
         # 크롬 드라이버 패스

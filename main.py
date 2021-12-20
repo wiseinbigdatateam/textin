@@ -2,9 +2,9 @@ import pandas as pd
 import os
 
 import crawlingconfig
-import tstory
-import naver
-from bigkinds.bigkinds import Bigkinds
+from bigkinds import Bigkinds
+import save
+
 
 # def printl(x):
 #     print(x)
@@ -13,7 +13,7 @@ class Main():
         # 사용자 입력값
         self._keyword = '에그타르트'
         self._site = 'bigkinds'
-        self._start_date = '20210901'
+        self._start_date = '20211101'
         self._end_date = '20211130'
 
         # 결과 저장 csv 파일명
@@ -26,85 +26,64 @@ class Main():
     def check_file(self):
         print('check file()')
         url_ing = 0
+        url_fin = 1
         body_ing = 2
-        url_file = f'{self.save_path}{self.base_name}_{url_ing}.csv'
-        body_file = f'{self.save_path}{self.base_name}_{body_ing}.csv'
-        if os.path.isfile(url_file):
-            exist_df = pd.read_csv(url_file)
+        body_fin = 3
+        url_ing_file = f'{self.save_path}{self.base_name}_{url_ing}.csv'
+        url_fin_file = f'{self.save_path}{self.base_name}_{url_fin}.csv'
+        body_ing_file = f'{self.save_path}{self.base_name}_{body_ing}.csv'
+        body_fin_file = f'{self.save_path}{self.base_name}_{body_fin}.csv'
+
+        if os.path.isfile(url_ing_file):
+            exist_df = pd.read_csv(url_ing_file)
             exist_index = len(exist_df.index)
+            exist_state = url_ing
             print(f'URL 작업 중인 파일이 존재 합니다. 행 수: {exist_index}')
-            # start_page, start_list = self.set_start_point(url_ing, exist_index)
-        # 수정 필요
-        elif os.path.isfile(body_file):
-            exist_df = pd.read_csv(url_file)
-            exist_index = len(exist_df.index)
-            print(f'본문 작업 중인 URL 파일이 존재 합니다. 행 수: {exist_index}')
-            # start_page, start_list = self.set_start_point(body_ing, exist_index, url_file)
+
+        elif os.path.isfile(body_ing_file):
+            try:
+                exist_df = pd.read_csv(url_fin_file)
+                exist_index = len(exist_df.index)
+                print(f'본문 작업 중인 URL 파일이 존재 합니다. 행 수: {exist_index}')
+                exist_state = body_ing
+            except:
+                if not os.path.isfile(url_ing_file):
+                    print(f'본문 작업 중인 파일이 있으나, 완료된 URL 파일이 존재하지 않습니다.')
+                    return
         else:
             print(f'작업을 새로 시작합니다.')
             exist_df = pd.DataFrame(columns=["title", "date", "content", "url"])
             exist_index = len(exist_df)
+            if self._site == 'bigkinds':
+                exist_state = 2
+            else:
+                exist_state = 0
             print(exist_index)
-            start_page = 1
-            start_list = 1
-        # return exist_df, start_page, start_list
-        return exist_df, exist_index
-
-    # 수정 필요 -> 각 모듈 앞단에 동일 이름으로 넣자?
-    def set_start_point(self, state, index, *args):
-        print('cal_start')
-        start_page = 1
-        start_list = 1
-        if self._site == 'naver':
-            if state == 0:
-                print('naver url')
-                start_page = int(index / 7) + 1
-
-            if state == 2:
-                print('naver body')
-                url_file = pd.read_csv(args.url_file)
-                start_list = url_file['url'][-1:].index
-
-        if self._site == 'tstory':
-            if state == 0:
-                print('tstory url')
-                start_page = int(index / 7) + 1
-
-            if state == 2:
-                print('tstory body')
-                url_file = pd.read_csv(args.url_file)
-                start_list = url_file['url'][-1:].index
-
-        if self._site == 'bigkinds':
-            if state == 2:
-                print('bigkinds body')
-                start_page = int(index / self.listnum + 1)
-                start_list = index % self.listnum
-
-        return start_page, start_list
+        return exist_df, exist_index, exist_state
 
     def start_crawling(self):
         # df, start_page, start_list = self.check_file()
-        df, index = self.check_file()
-        print(df, index)
+        exist_df, exist_index, exist_state = self.check_file()
+        print(exist_df, exist_index)
         # if self._site == 'naver':
         #     if os.path.isfile(f'{self.save_path}{self.base_name}_1.csv'):
-        #         # naver.bodycrawling(df, start_page, start_list)
+        #         # naver.bodycrawling(exist_df, exist_index)
         #     else:
-        #         # naver.urlcrawling(df, start_page, start_list)
+        #         # naver.urlcrawling(exist_df, exist_index)
         # if self._site == 'tstory':
         #     if os.path.isfile(f'{self.save_path}{self.base_name}_1.csv'):
-        #         # tstory.bodycrawling(df, start_page, start_list)
+        #         # tstory.bodycrawling(exist_df, exist_index)
         #     else:
-        #         # tstory.urlcrawling(df, start_page, start_list)
+        #         # tstory.urlcrawling(exist_df, exist_index)
         if self._site == 'bigkinds':
             # bigkinds.bodycrawling(df, start_page, start_list)
-            bk = Bigkinds()
-            bk.crawling_body(df, index)
+            bk = Bigkinds(self._keyword, self._start_date, self._end_date)
+            results, state = bk.crawling_body(exist_df, exist_index, exist_state)
+            print(f'-----result: {results}\n -----state: {state}')
+        save.save_to_csv(self.save_path, self.base_name, exist_df, exist_state, results, state)
 
 
 if __name__ == '__main__':
     crawling = Main()
-    # print(crawling.check_file())
     crawling.start_crawling()
 
