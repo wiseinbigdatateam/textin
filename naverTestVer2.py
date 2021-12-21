@@ -128,7 +128,6 @@ class NaverBlog:
     def content_crawling(self, exist_df, exist_index, exist_state):
         state = exist_state
         start_time = time.time()
-        # global state
         # 타이틀, url, 횟수
         return_title_list = []
         return_url_list = []

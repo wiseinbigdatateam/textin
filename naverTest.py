@@ -121,9 +121,9 @@ def content_crawling():
                     """//*[@id="content"]/section/div[3]/span[""" + str(next_page_num) + "]/a").click()
                 time.sleep(1)
 
-            print("state setting")
-            state = 1
-            print("state ", state)
+        print("state setting")
+        state = 1
+        print("state ", state)
 
             # if next_page_num != 1 and next_page_num != 0:
             #     driver.find_element_by_xpath(
@@ -141,7 +141,7 @@ def content_crawling():
         # print(ex)
         print("크롤링 종료")
         print("state ", state)
-        state = 0
+        # state = 0
 
     finally:
         # print("state = ", state)
