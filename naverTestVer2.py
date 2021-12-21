@@ -48,7 +48,6 @@ class NaverBlog:
         self._keyword = keyword
         self._start_date = start_date
         self._end_date = end_date
-        self.site = site
         self.driver = Webdriver().driver
         self.url = "https://section.blog.naver.com/Search/Post.naver?pageNo=1&rangeType=ALL&orderBy=sim&keyword=" + quote(
             keyword)
@@ -126,8 +125,8 @@ class NaverBlog:
             return False
         return True
 
-    def content_crawling(self, exist_df, start_page):
-        state = 0
+    def content_crawling(self, exist_df, exist_index, exist_state):
+        state = exist_state
         start_time = time.time()
         # global state
         # 타이틀, url, 횟수
@@ -142,6 +141,8 @@ class NaverBlog:
 
         page_count = find_page_count(page_num_text)  # 페이지 수 파악
         print("총 페이지 : ", page_count)
+
+        start_page = int(exist_index / 7) + 1
 
         if start_page != page_count:
             url_1 = url[:56]
@@ -185,11 +186,9 @@ class NaverBlog:
 
             print("state setting")
             state = 1
-            print("state ", state)
 
         except:
             print("크롤링 중단됨")
-            print("state : ", state)
 
         finally:
             endTime = time.time()
@@ -218,11 +217,13 @@ class NaverBlog:
             start_point = 0
         return start_point, exist_df
 
-    def main_crawling(self, data, exist_df):
+    def main_crawling(self, first_result_df, exist_state):
         # if not os.path.isfile(f"{self.csvFileName}_1.csv"):
         #     print(f"{self.csvFileName}_1.csv 파일이 존재 하지 않음")
         #     self.driver.close()
         #     sys.exit()
+        data = first_result_df
+        state = exist_state
 
         # 크롤링 한 결과를 담아 두는 리스트
         blog_title_list = []
@@ -295,19 +296,20 @@ class NaverBlog:
                     print(f"제외 인덱스 title : {except_title_list}")
                     print(f"제외 인덱스 url : {except_url_list}")
 
+            print("state setting")
             state = 3
 
         except:
             print(f"네이버 블로그가 아닙니다. 인덱스 : {i}")
             pass_count += 1
-            state = 2
 
         finally:
+            print("state ", state)
             results_df = pd.DataFrame(
                 {'title': blog_title_list, 'date': blog_time_list, 'text': blog_post_list, 'url': blog_url_list})
             # df_save_csv(last_df, self.mainCsvFileName, state, exist_df_1)
             self.driver.close()
-            return self.mainCsvFileName, exist_df, state, results_df, state
+            return self.mainCsvFileName, exist_df, exist_state, results_df, state
 
 # if __name__ == '__main__':
 #     startTime = time.time()
