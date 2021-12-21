@@ -6,8 +6,6 @@ from bigkinds import Bigkinds
 import save
 
 
-# def printl(x):
-#     print(x)
 class Main():
     def __init__(self):
         # 사용자 입력값
@@ -34,7 +32,11 @@ class Main():
         body_ing_file = f'{self.save_path}{self.base_name}_{body_ing}.csv'
         body_fin_file = f'{self.save_path}{self.base_name}_{body_fin}.csv'
 
-        if os.path.isfile(url_ing_file):
+        if os.path.isfile(body_fin_file):
+            print('본문 크롤링 완료된 파일이 존재합니다.')
+            quit()
+
+        elif os.path.isfile(url_ing_file):
             exist_df = pd.read_csv(url_ing_file)
             exist_index = len(exist_df.index)
             exist_state = url_ing
@@ -42,17 +44,21 @@ class Main():
 
         elif os.path.isfile(body_ing_file):
             try:
-                exist_df = pd.read_csv(url_fin_file)
+                exist_df = pd.read_csv(body_ing_file)
                 exist_index = len(exist_df.index)
                 print(f'본문 작업 중인 URL 파일이 존재 합니다. 행 수: {exist_index}')
                 exist_state = body_ing
             except:
                 if not os.path.isfile(url_ing_file):
                     print(f'본문 작업 중인 파일이 있으나, 완료된 URL 파일이 존재하지 않습니다.')
-                    return
+                    # url 수집 시작하는 함수 넣기
+
         else:
             print(f'작업을 새로 시작합니다.')
-            exist_df = pd.DataFrame(columns=["title", "date", "content", "url"])
+            if os.path.isfile(body_ing_file) and os.path.isfile(url_ing_file):
+                exist_df = pd.DataFrame(columns=["title", "url"])
+            else:
+                exist_df = pd.DataFrame(columns=["title", "date", "content", "url"])
             exist_index = len(exist_df)
             if self._site == 'bigkinds':
                 exist_state = 2
