@@ -22,14 +22,14 @@ from saveCsv import df_save_csv
 # chromedriver_path = '/Applications/chromedriver'  # 크롬드라이버 경로
 
 # # 테스트용
-# qText = "시그 mcx"
-# start_date = "2019.1.1"  # 시작날짜
-# end_date = "2021.11.25"  # 종료날짜
+keyword = "시그 mcx"
+start_date = "2019.1.1"  # 시작날짜
+end_date = "2021.11.25"  # 종료날짜
 
 # state 값
-# 0 : url 크롤링 중
+# 0: url 크롤링 중
 # 1: url 크롤링 완료
-# 2:body 크롤링 중
+# 2: body 크롤링 중
 # 3: body 크롤링 완료(전체 크롤링 완료)
 
 # 파일명 이제 지정
@@ -46,8 +46,8 @@ xpath_root = Naver_blog_xpath()
 class NaverBlog:
     def __init__(self, keyword, start_date, end_date):
         self._keyword = keyword
-        self._start_date = start_date
-        self._end_date = end_date
+        self.start_date = start_date
+        self.end_date = end_date
         self.driver = Webdriver().driver
         self.url = "https://section.blog.naver.com/Search/Post.naver?pageNo=1&rangeType=ALL&orderBy=sim&keyword=" + quote(
             keyword)
@@ -61,7 +61,7 @@ class NaverBlog:
             page_count = 1
         return page_count
 
-    def search_keyword(self, start_date, end_date):
+    def search_keyword(self, t_start_date, t_end_date):
         self.driver.get(self.url)
         self.driver.implicitly_wait(10)
         setting_period = self.driver.find_element_by_xpath(xpath_root.period_setting_button)  # 기간설정
@@ -72,7 +72,7 @@ class NaverBlog:
         s_date.click()
         s_date.clear()
         time.sleep(0.2)
-        for c in start_date:
+        for c in t_start_date:
             s_date.send_keys(c)
             time.sleep(0.2)
         setting_period.click()
@@ -83,7 +83,7 @@ class NaverBlog:
         e_date.click()
         e_date.clear()
         time.sleep(0.25)
-        for c in end_date:
+        for c in t_end_date:
             e_date.send_keys(c)
             time.sleep(0.2)
         setting_period.click()
@@ -168,7 +168,7 @@ class NaverBlog:
 
                 now_page = self.driver.current_url.split("&")[0][-1]
                 next_page_num = (int(now_page)) % 10 + 1
-                print("next_page_num : ", next_page_num, ", i : ", i)
+                # print("next_page_num : ", next_page_num, ", i : ", i)
 
                 click_page_num = """//*[@id="content"]/section/div[3]/span[""" + str(next_page_num) + "]/a"
 
@@ -196,9 +196,10 @@ class NaverBlog:
             print("state ", state)
             first_result_df = pd.DataFrame(data={'title': return_title_list, 'url': return_url_list})
             # first_csv = df_save_csv(first_df, self.csvFileName, state, exist_df)
+            self.driver.close()
             return first_result_df, state, exist_df
 
-    def check_exist_file(self):
+    def check_exist_file(self, data):
         if os.path.isfile(f"{self.mainCsvFileName}_2.csv"):
             # print("동일명 파일 있음")
             exist_df = pd.read_csv(f"{self.mainCsvFileName}_2.csv")
@@ -242,7 +243,7 @@ class NaverBlog:
         url_load = pd.read_csv(data)
         num_list = len(url_load)
 
-        start_point, exist_df = self.check_exist_file()
+        start_point, exist_df = self.check_exist_file(data)
 
         try:
             for i in range(start_point, num_list):
@@ -308,7 +309,8 @@ class NaverBlog:
                 {'title': blog_title_list, 'date': blog_time_list, 'text': blog_post_list, 'url': blog_url_list})
             # df_save_csv(last_df, self.mainCsvFileName, state, exist_df_1)
             self.driver.close()
-            return self.mainCsvFileName, exist_df, exist_state, results_df, state
+            # return self.mainCsvFileName, exist_df, exist_state, results_df, state
+            return exist_df, exist_state, results_df, state
 
 # if __name__ == '__main__':
 #     startTime = time.time()
