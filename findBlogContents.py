@@ -125,6 +125,12 @@ class FindTsotryContents():
             wTime = soup.find(class_="timeago dt-published").text
         elif soup.find(class_="jb-article-information-date"):
             wTime = soup.find(class_="jb-article-information-date").text
+        elif soup.find(class_="info_post"):
+            wTime = soup.find(class_="info_post").text
+        else:
+            today_date = datetime.datetime.now()
+            date_format = "%Y. %m. %d. %H:%M"
+            wTime = today_date.strftime(date_format)
         # print("date : ", wTime)
 
         return wTime
@@ -148,6 +154,8 @@ class FindTsotryContents():
             main_post = soup.find(class_="area-view").text
         elif soup.find(class_="tt_article_useless_p_margin contents_style"):
             main_post = soup.find(class_="tt_article_useless_p_margin contents_style").text
+        else:
+            main_post = "본문 내용을 찾지 못함"
 
         main_post = rework.text_cleaning(main_post)
         return main_post

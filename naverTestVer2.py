@@ -22,9 +22,9 @@ from saveCsv import df_save_csv
 # chromedriver_path = '/Applications/chromedriver'  # 크롬드라이버 경로
 
 # # 테스트용
-keyword = "시그 mcx"
-start_date = "2019.1.1"  # 시작날짜
-end_date = "2021.11.25"  # 종료날짜
+# keyword = "시그 mcx"
+# start_date = "2019.1.1"  # 시작날짜
+# end_date = "2021.11.25"  # 종료날짜
 
 # state 값
 # 0: url 크롤링 중
@@ -51,7 +51,7 @@ class NaverBlog:
         self.driver = Webdriver().driver
         self.url = "https://section.blog.naver.com/Search/Post.naver?pageNo=1&rangeType=ALL&orderBy=sim&keyword=" + quote(
             keyword)
-        self.csvFileName = f"{keyword}_naver_{start_date}_{end_date}_url"  # url 수집을 저장하는 파일명
+        self.csvFileName = f"{keyword}_naver_{start_date}_{end_date}"  # url 수집을 저장하는 파일명
         self.mainCsvFileName = f"{keyword}_naver_{start_date}_{end_date}"  # 최종수집결과를 저장하는 파일명
 
     def find_page_count(self, text):
@@ -92,32 +92,6 @@ class NaverBlog:
         self.driver.find_element_by_xpath(xpath_root.set_period_button).click()  # 적용 버튼
         return self.driver
 
-    # def check_exist_url_file(self, url, page_count):
-    #     if os.path.isfile(f"{csvFileName}_0.csv"):
-    #         print("중단된 url.csv 파일 존재")
-    #         exist_df = pd.read_csv(f"{csvFileName}_0.csv")
-    #         url_start_count = len(exist_df)
-    #         # print(url_start_count)
-    #         re_start_page = int(url_start_count / 7) + 1
-    #         # print("re_start_num : ", re_start_num)
-    #         if re_start_page != page_count:
-    #             url_1 = url[:56]
-    #             url_2 = url[57:]
-    #             url = url_1 + f"{re_start_page}" + url_2
-    #             self.driver.get(url)
-    #             start_page = re_start_page
-    #
-    #     elif os.path.isfile(f"{csvFileName}_1.csv"):
-    #         print("url 수집 완료.csv 파일")
-    #         exist_df = pd.DataFrame(columns=["title", "url"])
-    #         # return f"{csvFileName}_1.csv", exist_df
-    #         return page_count, exist_df
-    #     else:
-    #         exist_df = pd.DataFrame(columns=["title", "url"])
-    #         start_page = 0
-    #     time.sleep(2)
-    #     return start_page, exist_df
-
     def xpath_is_exist(self, xpath):
         try:
             self.driver.find_element_by_xpath(xpath)
@@ -125,7 +99,7 @@ class NaverBlog:
             return False
         return True
 
-    def content_crawling(self, exist_df, exist_index, exist_state):
+    def url_crawling(self, exist_df, exist_index, exist_state):
         state = exist_state
         start_time = time.time()
         # 타이틀, url, 횟수
@@ -182,7 +156,7 @@ class NaverBlog:
                     print("next page click, next page num = ", next_page_num)
                     self.driver.find_element_by_xpath(click_page_num).click()
                     time.sleep(1)
-
+            print("크롤링 완료됨")
             print("state setting")
             state = 1
 
@@ -196,7 +170,6 @@ class NaverBlog:
             print("state ", state)
             first_result_df = pd.DataFrame(data={'title': return_title_list, 'url': return_url_list})
             # first_csv = df_save_csv(first_df, self.csvFileName, state, exist_df)
-            self.driver.close()
             return first_result_df, state, exist_df
 
     def check_exist_file(self, data):
@@ -217,13 +190,12 @@ class NaverBlog:
             start_point = 0
         return start_point, exist_df
 
-    def main_crawling(self, first_result_df, exist_state):
+    def main_crawling(self, data, exist_state):
         # if not os.path.isfile(f"{self.csvFileName}_1.csv"):
         #     print(f"{self.csvFileName}_1.csv 파일이 존재 하지 않음")
         #     self.driver.close()
         #     sys.exit()
-        data = first_result_df
-        state = exist_state
+        state = 2
 
         # 크롤링 한 결과를 담아 두는 리스트
         blog_title_list = []
@@ -242,6 +214,7 @@ class NaverBlog:
 
         url_load = pd.read_csv(data)
         num_list = len(url_load)
+        print("num_list : ", num_list)
 
         start_point, exist_df = self.check_exist_file(data)
 
@@ -300,7 +273,7 @@ class NaverBlog:
             state = 3
 
         except:
-            print(f"네이버 블로그가 아닙니다. 인덱스 : {i}")
+            print(f"크롤링 중단됨. 인덱스 : {i}")
             pass_count += 1
 
         finally:
@@ -308,8 +281,7 @@ class NaverBlog:
             results_df = pd.DataFrame(
                 {'title': blog_title_list, 'date': blog_time_list, 'text': blog_post_list, 'url': blog_url_list})
             # df_save_csv(last_df, self.mainCsvFileName, state, exist_df_1)
-            self.driver.close()
-            # return self.mainCsvFileName, exist_df, exist_state, results_df, state
+            # self.driver.close()
             return exist_df, exist_state, results_df, state
 
 # if __name__ == '__main__':

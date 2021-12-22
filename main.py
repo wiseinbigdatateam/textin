@@ -6,15 +6,22 @@ import crawlingconfig
 import save
 
 from naverTestVer2 import NaverBlog
+from tStoryTestVer2 import TstoryBlog
 
 
 class Main():
     def __init__(self):
         # 사용자 입력값
         self._keyword = '시그 mcx'
-        self._site = 'naver'
-        self._start_date = '20190101'
-        self._end_date = '20211130'
+        self._site = 'tstory'
+        self._start_date = '2021121'
+        self._end_date = '20211222'
+
+        ## 입력받아서 할수 있게 임시로 만들어둔것 입니다. 
+        # self._keyword = input('검색어를 입력해 주세요 : ')
+        # self._site = input("naver, tstory, bigkinds 중 원하는 사이트를 입력해주세요 : ")
+        # self._start_date = input('시작 날짜를 입력해 주세요 (ex. 2021041) : ')
+        # self._end_date = input('종료 날짜를 입력해 주세요 (ex. 2021129) : ')
 
         # 결과 저장 csv 파일명
         self.base_name = f'{self._keyword}_{self._site}_{self._start_date}_{self._end_date}'
@@ -63,10 +70,11 @@ class Main():
 
         else:
             print(f'작업을 새로 시작합니다.')
-            if os.path.isfile(body_ing_file) and os.path.isfile(url_ing_file):
-                exist_df = pd.DataFrame(columns=["title", "url"])
-            else:
-                exist_df = pd.DataFrame(columns=["title", "date", "content", "url"])
+            # if os.path.isfile(body_ing_file) and os.path.isfile(url_ing_file):
+            #     exist_df = pd.DataFrame(columns=["title", "url"])
+            # else:
+            #     exist_df = pd.DataFrame(columns=["title", "date", "content", "url"])
+            exist_df = pd.DataFrame(columns=["title", "date", "content", "url"])
             exist_index = len(exist_df)
             if self._site == 'bigkinds':
                 exist_state = 2
@@ -98,18 +106,26 @@ class Main():
         elif self._site == 'naver':
             nb = NaverBlog(self._keyword, self._start_date, self._end_date)
             if exist_state != 1:
-                first_result_df, state, exist_df = nb.content_crawling(exist_df, exist_index, exist_state)
-                first_csv = save.save_to_csv(self.save_path, self.base_name, exist_df, exist_state, first_result_df, state)
-                exist_df, exist_state, results_df, state = nb.main_crawling(first_csv, exist_state)
+                first_result_df, state, exist_df = nb.url_crawling(exist_df, exist_index, exist_state)
+                url_csv = save.save_to_csv(self.save_path, self.base_name, exist_df, exist_state, first_result_df, state)
+                if exist_state == 1:
+                    exist_df, exist_state, results_df, state = nb.main_crawling(url_csv, exist_state)
 
             else:
+                print("네이버 url 수집 완료된 파일 존재")
                 exist_df, exist_state, results_df, state = nb.main_crawling(exist_df, exist_state)
 
-            save.save_to_csv(self.save_path, self.base_name, exist_df, exist_state, results_df, state)
+        elif self._site == 'tstory':
+            ts = TstoryBlog(self._keyword, self._start_date, self._end_date)
+            if exist_state != 1:
+                first_result_df, state, exist_df = ts.url_crawling(exist_df, exist_index, exist_state)
+                url_csv = save.save_to_csv(self.save_path, self.base_name, exist_df, exist_state, first_result_df,state)
+                exist_df, exist_state, results_df, state = ts.main_crawling(url_csv, exist_state)
+            else:
+                print("T스토리 url 수집 완료된 파일 존재")
+                exist_df, exist_state, results_df, state = ts.main_crawling(exist_df, exist_state)
 
-
-
-        # save.save_to_csv(self.save_path, self.base_name, exist_df, exist_state, results, state)
+        save.save_to_csv(self.save_path, self.base_name, exist_df, exist_state, results_df, state)
 
 
 if __name__ == '__main__':
