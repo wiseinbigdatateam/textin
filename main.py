@@ -17,7 +17,7 @@ class Main():
         self._start_date = '2021121'
         self._end_date = '20211222'
 
-        ## 입력받아서 할수 있게 임시로 만들어둔것 입니다. 
+        ## 입력받아서 할수 있게 임시로 만들어둔것 입니다.
         # self._keyword = input('검색어를 입력해 주세요 : ')
         # self._site = input("naver, tstory, bigkinds 중 원하는 사이트를 입력해주세요 : ")
         # self._start_date = input('시작 날짜를 입력해 주세요 (ex. 2021041) : ')
