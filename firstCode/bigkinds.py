@@ -26,7 +26,7 @@ class CrawlingBigkinds:
         self._end_date = '20211130'
         # 결과 저장 csv 파일명
         self.file_name = f'{self._keyword}_bigkinds_{self._start_date}_{self._end_date}'
-        self.save_path = "./"
+        self.save_path = "../"
 
 
         # 크롬드라이버 옵션
