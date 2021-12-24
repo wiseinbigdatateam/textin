@@ -282,14 +282,3 @@ class NaverBlog:
             # df_save_csv(last_df, self.mainCsvFileName, state, exist_df_1)
             # self.driver.close()
             return exist_df, exist_state, results_df, state
-
-# if __name__ == '__main__':
-#     startTime = time.time()
-#     naver_blog = NaverBlog()
-#
-#     start_page, exist_df = naver_blog.check_exist_file()
-#     first_data, exist_df = naver_blog.content_crawling(start_page, exist_df)
-#     naver_blog.main_crawling(first_data, exist_df)
-#
-#     endTime = time.time()
-#     print(f"소요시간 : {endTime - startTime:.5f} 초")
