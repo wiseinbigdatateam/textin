@@ -9,12 +9,12 @@ from urllib.parse import quote
 
 from .xpath import Tstory_blog_xpath
 from .findContents import FindTsotryContents
-from firstCode.reworkBlogContents import ReworkContents
-from firstCode.webdriver import Webdriver
+from common.reformat import Reformat
+from common.webdriver import Webdriver
 
 xpath_root = Tstory_blog_xpath()
 find_content = FindTsotryContents()  # 크롤링 데이터 탐색 부분
-rework_content = ReworkContents()  # 전처리 부분
+rework_content = Reformat()  # 전처리 부분
 
 class TstoryBlog:
     def __init__(self, keyword, start_date, end_date):
