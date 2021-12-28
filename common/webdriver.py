@@ -1,4 +1,4 @@
-from firstCode import crawlingconfig
+import config
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -6,7 +6,7 @@ from selenium.webdriver.chrome.options import Options
 class Webdriver:
     def __init__(self):
         # 크롬 드라이버 패스
-        path = crawlingconfig.chromedriver_path
+        path = config.chromedriver_path
         # 크롬 드라이버 옵션
         options = Options()
         # 크롬 vpn확장 프로그램 설치 후 해당 창에서 디버그 모드로 열 때
