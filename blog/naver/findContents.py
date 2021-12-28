@@ -1,8 +1,8 @@
 import datetime
 import re
-from common.reworkBlogContents import ReworkContents
+from common.reformat import Reformat
 
-rework = ReworkContents()
+rework = Reformat()
 
 class FindNaverContents():
     def __init__(self):
@@ -40,7 +40,7 @@ class FindNaverContents():
         # print(an_wTime)
         if len(wTime) != len(an_wTime):
             # wTime = Find_contents.re_wTime(an_wTime)
-            wTime = ReworkContents.re_date(self, an_wTime)
+            wTime = Reformat.re_date(self, an_wTime)
             # wTime = rework.re_wTime(an_wTime)
             # print(f"wTime3 : {wTime}")
         return wTime

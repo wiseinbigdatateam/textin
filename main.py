@@ -1,10 +1,10 @@
 import pandas as pd
 import os
-from common import crawlingconfig
+import config
 from common import save
-from bigkinds.bigkinds import Bigkinds
-from naver.naverBlog import NaverBlog
-from tstory.tStory import TstoryBlog
+from bigkinds.main import Bigkinds
+from blog.naver import NaverBlog
+from blog.tstory import TstoryBlog
 
 
 class Main():
@@ -23,7 +23,7 @@ class Main():
 
         # 결과 저장 csv 파일명
         self.base_name = f'{self._keyword}_{self._site}_{self._start_date}_{self._end_date}'
-        self.save_path = crawlingconfig.save_path
+        self.save_path = config.save_path
 
     def check_file(self):
         print('check file()')

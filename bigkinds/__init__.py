@@ -1,2 +1,2 @@
-from .bigkinds import Bigkinds
+from .main import Bigkinds
 from .xpath import BigkindsXpath
