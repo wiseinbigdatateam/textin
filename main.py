@@ -7,7 +7,7 @@ from blog.naver import NaverBlog
 from blog.tstory import TstoryBlog
 
 
-class Main():
+class Crawling():
     def __init__(self):
         # 사용자 입력값
         self._keyword = '시그 mcx'
@@ -118,5 +118,5 @@ class Main():
 
 
 if __name__ == '__main__':
-    crawling = Main()
+    crawling = Crawling()
     crawling.start_crawling()
