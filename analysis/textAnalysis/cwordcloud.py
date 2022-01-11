@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
-import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib import font_manager
-from collections import Counter
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-import platform
 import numpy as np
 from wordcloud import WordCloud
 
-from analysis.preprocess.preprocessor import remove_words
+
 from analysis.analysisconfig import FONT_PATH
 
 
@@ -18,24 +14,22 @@ class Cwordcloud():
             cv = CountVectorizer(max_features=200)
             #vect = CountVectorizer(stop_words=["the", "a", "an", "is", "not"])
         elif vectorizer == 'tfidf':
-            cv = TfidfVectorizer(max_features=100)
+            cv = TfidfVectorizer(max_features=200)
         else:
             print('잘못된 빈도분석 방법입니다.')
             raise Exception
-        print(corpus)
+        # print('corpu\n', corpus)
+        count = 0
 
         dtm = cv.fit_transform(corpus)
-        print('dtm\n', dtm)
         words = cv.get_feature_names_out()
-        print('words\n', words)
         count_mat = dtm.sum(axis=0)
-        print('count_mat\n', count_mat)
         count = np.squeeze(np.asarray(count_mat))
-        print('count\n', count)
         word_count = list(zip(words, count))
-        print('word_count\n', word_count)
         word_count = sorted(word_count, key=lambda x: x[1], reverse=True)
-        print('word_count\n', word_count)
+        count_word = 0
+        for word in word_count:
+            count_word = count_word + word[1]
         return word_count
 
     def wordcloud(self, word_count):
@@ -55,7 +49,7 @@ class Cwordcloud():
 #
 #     clean_corpus = remove_words(corpus[0], stop_words)
 #     corpus[0] = clean_corpus
-#     an = Analysis()
+#     an = Cwordcloud()
 #     word_count = an.frequency(corpus, 'count')
 #     print(word_count)
 #     an.wordcloud(word_count)

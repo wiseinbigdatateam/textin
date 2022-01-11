@@ -8,11 +8,14 @@ from konlpy.tag import Okt
 # clean()
 # tokenizer()
 
-def remove_words(corpus, words_list):
-    for word in words_list:
-        corpus = corpus.replace(word, '')
-    return corpus
-
+def remove_words(documents, words_list):
+    results = pd.DataFrame(columns=['removed'])
+    for document in documents:
+        for word in words_list:
+            document = document.replace(word, '')
+        document = re.sub(r'\s+', ' ', document)
+        results.loc[results.shape[0]] = document
+    return results
 
 # class needs to impliment Preprocessor
 class Preprocessor:
@@ -20,12 +23,14 @@ class Preprocessor:
         self.okt = Okt()
         self.ko_mecab = Mecab()
 
-    def clean(self, documents, options, stop_words):
+    def clean(self, documents, options, words_list):
         # print('clean()')
         # print(documents)
         # print('docs type', type(documents)) # <class 'pandas.core.series.Series'>
         # print(options)
         results = pd.DataFrame(columns=['cleaned'])
+        # (옵션4)입력단어 제거 - 양이 많아지면 오래걸리지 않을까? 단어 단위 처리니까 토크나이징에서?
+
         for document in documents:
             # print('doc type', type(document)) # str
             # (옵션1)특수문자 제거
@@ -40,12 +45,12 @@ class Preprocessor:
             if 3 in options:
                 document = re.sub(r'[0-9]', '', document)
 
-            # (옵션4)입력단어 제거 - 양이 많아지면 오래걸리지 않을까? 단어 단위 처리니까 토크나이징에서?
             if 4 in options:
-                document = remove_words(document, stop_words)
+                # documents = remove_words(documents, stop_words)
+                for word in words_list:
+                    document = document.replace(word, '')
                 # for word in stop_words:
                 #     document = document.replace(word, '')
-
             document = re.sub(r'\s+', ' ', document)
             # document = re.sub('[ +]', ' ', document)
             # 처리되지 않는 띄어쓰기 존재 - '    텀  영상 요약  군사 갤러리_ 초기형 키모드 달린거는 총열이 얇아서 쏘다보면 명중률이 떨어지는 문제가 있었음 의 수명이 만발이라는 카더라성 정보를 본적 있는대 아마 이거 버투스가 구버전에 비해 무거워진 이유가 저거였나보내 '
@@ -53,13 +58,13 @@ class Preprocessor:
         # print('result', type(results))
         return results  # 리턴을 Dataframe? Series? (인자 받을 때는 시리즈임)
 
-    def tokenize(self, documents, option, *args):
+    def tokenize(self, documents, option, *user_pos):
         _results = pd.DataFrame(columns=['tokenized'])
         # 기본 품사, 사용자 설정 품사 추가
         reuslt_pos = ['Noun', 'Adjective']  # pos = part of speech : 품사
-        if args:
-            for arg in args:
-                reuslt_pos.append(arg)
+        if user_pos:
+            for pos in user_pos[0]:
+                reuslt_pos.append(pos)
 
         for document in documents:
             # print(type(document))
