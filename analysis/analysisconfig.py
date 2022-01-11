@@ -1,0 +1,1 @@
+FONT_PATH = 'NanumGothic.ttf'
