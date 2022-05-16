@@ -1,4 +1,5 @@
 from es import from_es
+from textAnalysis import frequency
 from konlpy.tag import *
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 import pandas as pd
@@ -208,11 +209,12 @@ class Preprocessor:
         self.dict[self.select_column] = self.df
         self.columns.append(self.select_column)
 
+        _freq = frequency.Frequency()
+        _freq.get_freq(self.df, self.select_column)
+        _freq._get_word_freq()
+        _freq._get_tfidf_score()
 
-        self._get_word_freq()
-        self._get_tfidf_score()
-
-        self.df.to_csv(self.select_column + '.csv', index=False)
+        # self.df.to_csv(self.select_column + '.csv', index=False)
 
     def _extract_morph(self, text, morph_list):
         try:
@@ -223,19 +225,3 @@ class Preprocessor:
                 text = ' '.join(list(zip(*list(filter(lambda x: x[-1] in morph_list and x[0] not in stopwords and len(x[0])>1, self.func.pos(text)))))[0])
         except: text = ''
         finally: return text
-
-
-    def _get_word_freq(self):
-        _word_frequency = Counter(' '.join(list(self.df[self.select_column])).split(' ')).most_common(100)
-        print(tabulate(_word_frequency, headers=['Word', 'Frequency']))
-
-    def _get_tfidf_score(self):
-        _corpus = list(itertools.chain(list(self.df[self.select_column])))
-        _tfidfv = TfidfVectorizer().fit(_corpus)
-        _tfidfv_arr = _tfidfv.transform(_corpus).toarray()
-        _tfidfv_vocab = _tfidfv.vocabulary_
-        _tmp_df = pd.DataFrame(_tfidfv_arr)
-        _tmp_df.columns = sorted(_tfidfv_vocab)
-        _tmp_df = _tmp_df.T
-        _tmp_df['sum'] = _tmp_df.sum(axis=1)
-        print(_tmp_df['sum'].nlargest(100, keep='first'))
