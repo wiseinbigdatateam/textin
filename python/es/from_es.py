@@ -87,7 +87,7 @@ class FromES:
     def send_es(self, df, select_column):
 
         date = datetime.today()
-        today = "_" + str(date.year) + "_" + str(date.month) + "_" + str(date.day)
+        today = "-" + str(date.year) + "." + str(date.month) + "." + str(date.day)
 
         data = [
             {
