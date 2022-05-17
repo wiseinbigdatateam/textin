@@ -1,6 +1,7 @@
 import pandas as pd
 from elasticsearch import Elasticsearch, helpers
 from elasticsearch_dsl import Search
+from datetime import datetime
 
 class FromES:
 
@@ -84,9 +85,13 @@ class FromES:
         return valid_keys
 
     def send_es(self, df, select_column):
+
+        date = datetime.today()
+        today = "_" + str(date.year) + "_" + str(date.month) + "_" + str(date.day)
+
         data = [
             {
-                "_index": select_column,
+                "_index": select_column + today,
                 "_id": num,
                 "_source": {
                     "preprocess": contents}
