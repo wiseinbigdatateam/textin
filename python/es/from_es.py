@@ -7,7 +7,7 @@ class FromES:
     def __init__(self):
 
         # domain 설정
-        self.domain = "3.38.136.116"
+        self.domain = "3.38.218.249"
 
         # port 설정 : default는 9200
         self.port = 9200

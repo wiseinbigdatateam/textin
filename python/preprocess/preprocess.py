@@ -1,14 +1,12 @@
 from es import from_es
 from textAnalysis import frequency
 from konlpy.tag import *
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 import pandas as pd
 from .variable import pattern_dict, pos_dict, stopwords
 import itertools
-from collections import Counter
-from tabulate import tabulate
 import platform
-import numpy as np
+from datetime import datetime
+from elasticsearch import helpers
 
 class Preprocessor:
 
@@ -33,7 +31,7 @@ class Preprocessor:
     # preprocess 총괄 함수
     def start_preprocess(self, func_name, options=None, keywords=None):
         if self.df == None:
-            self.get_df()
+            fes = self.get_df()
 
         # 선택한 형태소 분석기 생성
         self.func_name = func_name
@@ -44,7 +42,9 @@ class Preprocessor:
         while _more_preprocess:
             self.clean(options, keywords)
             print("다른 데이터로 전처리를 진행하실꺼면 1, 종료는 2 : ")
-            if input() == '2': _more_preprocess=False
+            if input() == '2':
+                self.send_es(fes.es)
+                _more_preprocess=False
 
     # elasticsearch로 부터 dataframe을 갖고 옴
     def get_df(self):
@@ -57,6 +57,8 @@ class Preprocessor:
         self.df = self.df.reset_index(drop=True)
         self.df.columns = ['original']
         self.dict['original'] = self.df
+
+        return fes
 
     def _input_options(self):
         print("# 1 : 특수문자  /  2 : 영문  / 3 : 숫자  /  4 : 한자 / 5 : 해당 키워드 삭제  /  6 : 해당 키워드가 있는 문서 삭제")
@@ -225,3 +227,16 @@ class Preprocessor:
                 text = ' '.join(list(zip(*list(filter(lambda x: x[-1] in morph_list and x[0] not in stopwords and len(x[0])>1, self.func.pos(text)))))[0])
         except: text = ''
         finally: return text
+
+    def send_es(self, es):
+        data = [
+            {
+                "_index": self.select_column,
+                "_id": num,
+                "_source": {
+                    "preprocess": contents}
+            }
+            for num, contents in enumerate(list(self.df[self.select_column]))
+        ]
+
+        helpers.bulk(es, data)
