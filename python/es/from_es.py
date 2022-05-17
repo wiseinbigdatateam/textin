@@ -82,3 +82,16 @@ class FromES:
         valid_keys = [key for key in test_keys if key not in not_ues_col]
 
         return valid_keys
+
+    def send_es(self, df, select_column):
+        data = [
+            {
+                "_index": select_column,
+                "_id": num,
+                "_source": {
+                    "preprocess": contents}
+            }
+            for num, contents in enumerate(list(df[select_column]))
+        ]
+
+        helpers.bulk(self.es, data)

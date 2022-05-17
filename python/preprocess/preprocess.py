@@ -5,8 +5,6 @@ import pandas as pd
 from .variable import pattern_dict, pos_dict, stopwords
 import itertools
 import platform
-from datetime import datetime
-from elasticsearch import helpers
 
 class Preprocessor:
 
@@ -43,7 +41,7 @@ class Preprocessor:
             self.clean(options, keywords)
             print("다른 데이터로 전처리를 진행하실꺼면 1, 종료는 2 : ")
             if input() == '2':
-                self.send_es(fes.es)
+                fes.send_es(self.df, self.select_column)
                 _more_preprocess=False
 
     # elasticsearch로 부터 dataframe을 갖고 옴
@@ -227,16 +225,3 @@ class Preprocessor:
                 text = ' '.join(list(zip(*list(filter(lambda x: x[-1] in morph_list and x[0] not in stopwords and len(x[0])>1, self.func.pos(text)))))[0])
         except: text = ''
         finally: return text
-
-    def send_es(self, es):
-        data = [
-            {
-                "_index": self.select_column,
-                "_id": num,
-                "_source": {
-                    "preprocess": contents}
-            }
-            for num, contents in enumerate(list(self.df[self.select_column]))
-        ]
-
-        helpers.bulk(es, data)
