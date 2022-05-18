@@ -1,10 +1,5 @@
 from es import from_es
-from textAnalysis import frequency
-from konlpy.tag import *
 import pandas as pd
-from variable import pattern_dict, pos_dict, stopwords
-import itertools
-import platform
 from preprocessing import Preprocessor
 from morph_analysis import Morph
 
@@ -45,10 +40,8 @@ class DataDict:
             self.clean(options, keywords)
             print("다른 데이터로 전처리를 진행하실꺼면 1, 종료는 2 : ")
             if input() == '2':
+                self.fes.send_es(self.df, self.select_column)
                 break
-
-        else: self.fes.send_es(self.df, self.select_column)
-
 
     # elasticsearch로 부터 dataframe을 갖고 옴
     def get_df(self):
@@ -86,7 +79,8 @@ class DataDict:
 
         for i in range(10):
             # 처음 입력받은 dataframe 정제 => null값 제거
-            self.ps.delete_field(self.df, keywords)
+            self.ps.df, self.ps.select_column = self.df, self.select_column
+            self.ps.delete_field(keywords)
 
             self.df = self.ps.df
 

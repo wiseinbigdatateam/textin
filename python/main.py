@@ -1,7 +1,6 @@
-from preprocess import preprocess
-from es import from_es
+from ctrl_data import DataDict
 
 if __name__ == "__main__":
-    ps = preprocess.Preprocessor()
+    test = DataDict()
     keywords = ['경기도', '석촌', '아파트', '부동산', '서울']
-    save_df = ps.start_preprocess('mecab', [1,2,3,4,6], keywords)
+    save_df = test.start_preprocess([1,2,3,4,6], keywords)
