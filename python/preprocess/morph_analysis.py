@@ -50,6 +50,7 @@ class Morph:
         _freq._get_word_freq()
         _freq._get_tfidf_score()
 
+        return df
 
     def _extract_morph(self, text, morph_list):
         try:

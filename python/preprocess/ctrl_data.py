@@ -119,7 +119,7 @@ class DataDict:
 
         morph_options = list(map(str, input("추출하고자 하는 형태소, 1:명사, 2:동사, 3:형용사 :").split(",")))
 
-        self.morph_analysis.get_morph(self.df, self.select_column, morph_options)
+        self.df = self.morph_analysis.get_morph(self.df, self.select_column, morph_options)
 
     def _create_df(self, col_num):
         # self.columns.append(_name + str(_col_num+1))
