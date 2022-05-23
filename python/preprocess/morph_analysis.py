@@ -45,6 +45,22 @@ class Morph:
         # self.dict[self.select_column] = self.df
         # self.columns.append(self.select_column)
 
+        # 토픽모델링
+        # _topic = TopicModeling()
+        # print('+++++++++++TopicModeling start+++++++++++')
+        # _topic.get_topic(df, select_column)
+        # result_corpus, dictionary, words = _topic.get_list()
+        # _topic.getPyKDAvis(result_corpus, dictionary, words)
+        # print('+++++++++++TopicModeling finished+++++++++++')
+
+        # 네트워크 분석
+        # _network = network()
+        # print('+++++++++++Network start+++++++++++')
+        # _network.get_network(df, select_column)
+        # result_corpus = _network.network_list()
+        # _network.make_network(result_corpus)
+        # print('+++++++++++Network finished+++++++++++')
+
         _freq = Frequency()
         _freq.get_freq(df, select_column)
         _freq._get_word_freq()
