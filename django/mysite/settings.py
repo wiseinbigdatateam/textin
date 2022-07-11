@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-r4v9lo9g$+rzzsl+$se*2br*h3_n%(=mckx=j!msp4!761y-2d
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
+import os
 
 # Application definition
 
@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'api',
+    'webpack_loader',
 ]
 
 MIDDLEWARE = [
@@ -51,10 +53,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'mysite.urls'
 
+VUE_DIR = '/home/ubuntu/textin/vue-django/'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(VUE_DIR, 'public')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -66,6 +70,16 @@ TEMPLATES = [
         },
     },
 ]
+
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'CACHE': DEBUG,
+        'BUNDLE_DIR_NAME': '/bundles/',  # must end with slash
+        'STATS_FILE': os.path.join(VUE_DIR, 'webpack-stats.json'),
+    }
+}
+
+
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 

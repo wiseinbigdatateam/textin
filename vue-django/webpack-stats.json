@@ -1,0 +1,26 @@
+{
+  "status": "done",
+  "assets": {
+    "js/index.js": {
+      "name": "js/index.js",
+      "path": "/home/ubuntu/textin/vue-django/dist/js/index.js",
+      "publicPath": "http://0.0.0.0:8081/js/index.js"
+    },
+    "favicon.ico": {
+      "name": "favicon.ico",
+      "path": "/home/ubuntu/textin/vue-django/dist/favicon.ico",
+      "publicPath": "http://0.0.0.0:8081/favicon.ico"
+    },
+    "index.html": {
+      "name": "index.html",
+      "path": "/home/ubuntu/textin/vue-django/dist/index.html",
+      "publicPath": "http://0.0.0.0:8081/index.html"
+    }
+  },
+  "chunks": {
+    "index": [
+      "js/index.js"
+    ]
+  },
+  "publicPath": "http://0.0.0.0:8081/"
+}

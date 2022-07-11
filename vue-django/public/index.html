@@ -1,0 +1,53 @@
+{% load render_bundle from webpack_loader %}
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    <title>django-vue</title>
+  </head>
+  <body>
+	<div id="app">
+  		<div class="search">
+      			<p>
+			<label><h1>문장을 입력하시면 출력됩니다.</h1></label> <input type="text" @change="input"/>
+          			<button @click="click">click</button>
+      			</p>
+			<p><h2>입력하신 문장 : [[text]]</h2></p>
+  		</div>
+	</div>
+	<script src="https://unpkg.com/vue"></script>
+	<script>
+		const app = Vue.createApp({
+			el:'app',
+			delimiters:['[[',']]'],
+    			data(){
+        			return {
+            				text : '', //출력될 값
+            				inputText : '' //input값
+        				}
+    				},
+    			methods:{
+        			input(e){
+            				return this.inputText = e.target.value
+            				//input에 입력된 값을 inputText로 넣어주기
+        				},
+        			click(){
+            				return this.text = this.inputText
+            				//출력될 값인 text에 위에서 input 값을 넣어준 inputText를 넣어주기
+        				}
+    				}
+		}).mount("#app")
+	</script>
+	
+	  
+    <noscript>
+      <strong>We're sorry but django-vue doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+    <div id="app"></div>
+    {% render_bundle 'index' %}
+    <!-- built files will be auto injected -->
+  </body>
+</html>
