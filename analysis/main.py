@@ -4,6 +4,9 @@ from preprocess.preprocessor import Preprocessor, remove_words
 from textAnalysis.frequency import Frequency
 from textAnalysis.topicModeling import TopicModeling
 
+from importData.from_es import FromES
+from importData.from_db import FromDB
+
 from collections import Counter
 
 # if __name__ == '__main__':
@@ -25,8 +28,20 @@ class Analysis:
 
     def start_analysis(self):
         print('Anaysis start')
-        # db 연결
-        df = pd.read_csv('시그 mcx_네이버블로그_20190101_20211125.csv', index_col=0)
+
+        # data 받을 출처 정하기
+
+        choice = int(input())
+
+        if choice == 1:
+            from_data = FromES()
+
+        elif choice == 2:
+            from_data = FromDB()
+
+        df = from_data.get_data()
+
+        # df = pd.read_csv('시그 mcx_네이버블로그_20190101_20211125.csv', index_col=0)
 
         ### preprocess
         pp = Preprocessor()
