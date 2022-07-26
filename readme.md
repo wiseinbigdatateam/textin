@@ -11,3 +11,8 @@
 - preprocess : 전처리 부분
 	- preprocess : 전처리 실행
 	- variable : 형태소, 불용어, 정규식 유형 저장
+
+- Vue-django : Vue.js 3 버전이 설치됨
+### Vue-django : Vue.js 3 버전 설치
+- public : index.html이 위치
+- public/vue.config.js : django 와 연결을 위한 설정
